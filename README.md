@@ -14,12 +14,5 @@ AntPat allows you to do things with antenna radiation pattern, such as
 ### How do I get set up? ###
 
 * Use setup.py script to install
-* Requires: numpy, and scipy 0.14.
+* Requires: numpy, matplotlib and scipy >=0.14.
 
-### Contribution guidelines ###
-
-* None formalised
-
-### Who do I talk to? ###
-
-* tobia@chalmers.se
