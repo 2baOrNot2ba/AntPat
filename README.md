@@ -10,14 +10,11 @@ AntPat allows you to do things with antenna radiation pattern, such as
 * visualize
 * rotate and translate
 * build polarimeters from pairs
-* get Jones gain in astronomical coordinates  
-* Version: 1.0
 
 ### How do I get set up? ###
 
 * Use setup.py script to install
-* Can run python 2.7 
-* Requires: pyrap, numpy, and scipy 0.14.
+* Requires: numpy, and scipy 0.14.
 
 ### Contribution guidelines ###
 
