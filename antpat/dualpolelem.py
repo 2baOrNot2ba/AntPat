@@ -1,0 +1,144 @@
+"""Model generic, a dual polarized antenna element."""
+#TobiaC 2015-12-02
+
+import math
+import numpy
+import matplotlib.pyplot as plt
+import matplotlib.dates
+from antpat.reps.sphgridfun import pntsonsphere, tvecfun
+
+
+class DualPolElem(object):
+    """Main class for a dual-pol antenna element. It can be constructed
+    from two generic representations: two radiation far-fields (two
+    single pol antennas) or a tangential (Jones) matrix.
+    """
+    def __init__(self, *args):
+        if len(args) == 0:
+            pass
+        elif len(args) == 1:
+            #"tmfd" stands for tangential matrix field on directions
+            self.tmfd   = args[0]
+            self.radFFp = None
+            self.radFFq = None
+        elif len(args) == 2:
+            self.tmfd   = None
+            self.radFFp = args[0]
+            self.radFFq = args[1]
+        else:
+            print "Not more than two arguments"
+            exit(1)
+        self.basis = None
+    
+    def getfreqs(self):
+        """Get Frequencies"""
+        if self.tmfd is None:
+            return self.radFFp.getfreqs()
+        else:
+            return self.tmfd.getfreqs()
+    
+    def getJonesPat(self,freqval):
+        """Return the dual-pol antenna elements Jones pattern for a
+        given frequency.""" 
+        THETA, PHI, p_E_th, p_E_ph=self.radFFp.getFFongrid(freqval)
+        THETA, PHI, q_E_th, q_E_ph=self.radFFq.getFFongrid(freqval)
+        
+        Jones=numpy.zeros((2,2,)+p_E_th.shape,dtype=complex)
+        Jones[0,0,...]=p_E_th
+        Jones[0,1,...]=p_E_ph
+        Jones[1,0,...]=q_E_th
+        Jones[1,1,...]=q_E_ph
+        return THETA, PHI, Jones
+    
+    def getJonesAlong(self, freqval, theta_phi_view):
+        theta_view, phi_view = theta_phi_view
+        (theta_build, phi_build) = self.view2build_coords(theta_view, phi_view)
+        if self.tmfd is None:
+            p_E_th, p_E_ph = self.radFFp.getFFalong_build(freqval,
+                                              (theta_build, phi_build) )
+            q_E_th, q_E_ph = self.radFFq.getFFalong_build(freqval,
+                                              (theta_build, phi_build) )
+            Jones=numpy.zeros(p_E_th.shape+(2,2), dtype=complex)
+            Jones[...,0,0] = p_E_th
+            Jones[...,0,1] = p_E_ph
+            Jones[...,1,0] = q_E_th
+            Jones[...,1,1] = q_E_ph
+        else:
+            Jones = self.tmfd.getJonesAlong(freqval,
+                                              (theta_build, phi_build) )
+        return Jones
+    
+    def view2build_coords(self, theta_view, phi_view):
+        """Get the corresponding directions in the build frame."""
+        if self.basis is not None:
+            (theta_build, phi_build) = pntsonsphere.rotToFrame(
+                                           numpy.transpose(self.basis),
+                                           theta_view, phi_view)
+        else:
+            (theta_build, phi_build) = (theta_view, phi_view)
+        return (theta_build, phi_build)
+    
+    def rotateframe(self, rotMat):
+        """Rotate the frame of antenna. This is a 'passive' rotation: it
+        does not rotate the field, but when evaluated in some
+        direction the direction given will be rotated to the frame so
+        as to appear as if it were rotated.
+        
+        The basis or rotation matrix is to be considered as acting on
+        the antenna, i.e.
+        
+              view_crds=rotMat*build_crds
+        
+        assuming the the antenna has not been rotated already. If it has then
+        the inputted rotation is added to the current rotation, so that
+        
+              view_crds=rotMat*rotMat_0*build_crds
+        
+        where rotMat_0 is previous rotation state (could be aggregate of many).
+        """
+        if self.basis is None:
+            self.basis = rotMat
+        else:
+            self.basis = numpy.matmul(rotMat, self.basis)
+    
+    def plotJonesPat3D(self, freq=0.0, vcoord='sph', 
+                                       projection='equirectangular'):
+        """Plot the Jones pattern as two single pol antenna patterns."""
+        theta_rad, phi_rad, JonesPat=self.getJonesPat(freq)
+        Ep = numpy.squeeze(JonesPat[0,:,:,:])
+        Eq = numpy.squeeze(JonesPat[1,:,:,:])
+        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Ep[0,:,:]),
+                            numpy.squeeze(Ep[1,:,:]), freq, vcoord,
+                                                            projection)
+        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[0,:,:]),
+                            numpy.squeeze(Eq[1,:,:]), freq, vcoord,
+                                                            projection)
+
+
+def plot_polcomp_dynspec(tims, frqs, jones):
+    """Plot dynamic power spectra of each polarization component."""
+    #fig, (ax0, ax1) = plt.subplots(nrows=2)
+    p_ch = numpy.abs(jones[:,:,0,0].squeeze())**2+numpy.abs(jones[:,:,0,1].squeeze())**2
+    q_ch = numpy.abs(jones[:,:,1,1].squeeze())**2+numpy.abs(jones[:,:,1,0].squeeze())**2
+    ftims=matplotlib.dates.date2num(tims)
+    plt.figure()
+    plt.subplot(211)
+    plt.pcolormesh(numpy.asarray(tims), frqs, 10*numpy.log10(p_ch))
+    plt.title('p channel')
+    #plt.clim(-9, -3)
+    plt.colorbar()
+    plt.subplot(212)
+    plt.pcolormesh(numpy.asarray(tims), frqs, 10*numpy.log10(q_ch))
+    plt.title('q-channel')
+    #plt.clim(-9, -3)
+    plt.xlabel('Time')
+    plt.ylabel('Frequency')
+    plt.colorbar()
+    plt.show()
+
+
+def getIXRJ(jones):
+    U,s,V=numpy.linalg.svd(jones)
+    cnd=s[0]/s[1]
+    IXRJ=((1+cnd)/(1-cnd))**2
+    return IXRJ
