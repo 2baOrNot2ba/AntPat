@@ -243,6 +243,17 @@ def plotAntPat2D(angle_rad, E_th, E_ph, freq=0.5):
     plt.show()
 
 
+def plotFEKO(filename, request=None):
+    """Convenience function that reads in FEKO FFE files - using load_ffe() - and
+    plots it - using plotvfonsph()."""
+    tvf = TVecFields()
+    tvf.load_ffe(filename, request)
+    freqs = tvf.getRs()
+    freq = freqs[0]
+    (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(), tvf.getFthetas(freq), tvf.getFphis(freq))
+    plotvfonsph(THETA, PHI, E_th, E_ph, freq, vcoord='Ludwig3', projection='orthographic')
+
+
 #TobiaC (2013-06-17)
 #This function should be recast as refering to radial component instead of freq.
 def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
