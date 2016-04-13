@@ -105,11 +105,16 @@ class TVecFields(object):
         F_ph_intrpf = RegularGridInterpolator(rthetaphiAxis, F_ph_prdc)
         F_ph = F_ph_intrpf(rthetaphi)
         return F_th, F_ph
+    
+    def getAngRes(self):
+        """Get angular resolution of mesh grid."""
+        resol_th = self.thetaMsh[1,0]-self.thetaMsh[0,0]
+        resol_ph = self.phiMsh[0,1]-self.phiMsh[0,0]
+        return resol_th, resol_ph
       
     def sphinterp_my(self, theta, phi):
       #Currently this uses nearest value. No interpolation!
-      resol_th = self.thetaMsh[1,0]-self.thetaMsh[0,0]
-      resol_ph = self.phiMsh[0,1]-self.phiMsh[0,0]
+      resol_th, resol_ph  = self.getAngRes()
       ind0 = numpy.argwhere(numpy.isclose(self.thetaMsh[:,0]-theta,
                                         numpy.zeros(self.thetaMsh.shape[0]),
                                         rtol=0.0,atol=resol_th))[0][0]
@@ -243,13 +248,18 @@ def plotAntPat2D(angle_rad, E_th, E_ph, freq=0.5):
     plt.show()
 
 
-def plotFEKO(filename, request=None):
+def plotFEKO(filename, request=None, freq_req=None):
     """Convenience function that reads in FEKO FFE files - using load_ffe() - and
     plots it - using plotvfonsph()."""
     tvf = TVecFields()
     tvf.load_ffe(filename, request)
     freqs = tvf.getRs()
-    freq = freqs[0]
+    #frqIdx = np.where(np.isclose(freqs,freq,atol=190e3))[0][0]
+    if freq_req is None:
+        frqIdx = 0
+    else:
+        frqIdx = numpy.interp(freq_req, freqs, range(len(freqs)))
+    freq = freqs[frqIdx]
     (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(), tvf.getFthetas(freq), tvf.getFphis(freq))
     plotvfonsph(THETA, PHI, E_th, E_ph, freq, vcoord='Ludwig3', projection='orthographic')
 
@@ -257,7 +267,7 @@ def plotFEKO(filename, request=None):
 #TobiaC (2013-06-17)
 #This function should be recast as refering to radial component instead of freq.
 def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
-                     vcoord='sph', projection='equirectangular'):
+                     vcoord='sph', projection='orthographic'):
     if projection == 'orthographic':
         #Fix check for theta>pi/2
         #Plot hemisphere theta<pi/2
@@ -267,6 +277,14 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         x = numpy.sin(theta_rad)*numpy.cos(phi_rad)
         y = numpy.sin(theta_rad)*numpy.sin(phi_rad)
         xyNames = ('l','m')
+        nom_xticks=None
+    elif projection == 'azimuthal-equidistant':
+        #theta_res = theta_rad[1,0]-theta_rad[0,0]
+        #2D polar to cartesian conversion
+        #(put in offset)
+        x = theta_rad*numpy.cos(phi_rad)
+        y = theta_rad*numpy.sin(phi_rad)
+        xyNames = ('theta','phi')
         nom_xticks=None
     elif projection == 'equirectangular':
         y = numpy.rad2deg(theta_rad)
@@ -296,7 +314,8 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
     Z221 = numpy.absolute(E0)
     plt.pcolormesh(x, y, Z221)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title('abs('+compNames[0]+') @ '+str(freq/1e6)+' MHz')
+    plt.title('abs('+compNames[0]+') @ '+str(freq/1e6)+' MHz'
+              +'\n'+'projection: '+projection)
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
