@@ -262,8 +262,8 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         #Fix check for theta>pi/2
         #Plot hemisphere theta<pi/2
         UHmask = theta_rad>math.pi/2
-        numpy.ma.array(E_th, mask=UHmask)
-        numpy.ma.array(E_ph, mask=UHmask)
+        E_th = numpy.ma.array(E_th, mask=UHmask)
+        E_ph = numpy.ma.array(E_ph, mask=UHmask)
         x = numpy.sin(theta_rad)*numpy.cos(phi_rad)
         y = numpy.sin(theta_rad)*numpy.sin(phi_rad)
         xyNames = ('l','m')
