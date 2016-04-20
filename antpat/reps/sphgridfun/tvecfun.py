@@ -256,10 +256,16 @@ def plotFEKO(filename, request=None, freq_req=None):
     freqs = tvf.getRs()
     #frqIdx = np.where(np.isclose(freqs,freq,atol=190e3))[0][0]
     if freq_req is None:
+        print("")
+        print("No user specified frequency (will choose first in list)")
+        print("List of frequencies (in Hz):")
+        print(", ".join([str(f) for f in freqs]))
+        print("")
         frqIdx = 0
     else:
         frqIdx = numpy.interp(freq_req, freqs, range(len(freqs)))
     freq = freqs[frqIdx]
+    print("Frequency={}".format(freq))
     (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(), tvf.getFthetas(freq), tvf.getFphis(freq))
     plotvfonsph(THETA, PHI, E_th, E_ph, freq, vcoord='Ludwig3', projection='orthographic')
 
