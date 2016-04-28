@@ -102,17 +102,17 @@ class DualPolElem(object):
             self.basis = numpy.matmul(rotMat, self.basis)
     
     def plotJonesPat3D(self, freq=0.0, vcoord='sph', 
-                                       projection='equirectangular'):
+                       projection='equirectangular', cmplx_rep='AbsAng'):
         """Plot the Jones pattern as two single pol antenna patterns."""
         theta_rad, phi_rad, JonesPat=self.getJonesPat(freq)
         Ep = numpy.squeeze(JonesPat[0,:,:,:])
         Eq = numpy.squeeze(JonesPat[1,:,:,:])
         tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Ep[0,:,:]),
                             numpy.squeeze(Ep[1,:,:]), freq, vcoord,
-                                                            projection)
+                            projection, cmplx_rep, vfname='p-channel')
         tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[0,:,:]),
                             numpy.squeeze(Eq[1,:,:]), freq, vcoord,
-                                                            projection)
+                            projection, cmplx_rep, vfname='q-channel')
 
 
 def plot_polcomp_dynspec(tims, frqs, jones):
