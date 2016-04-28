@@ -273,7 +273,7 @@ def plotFEKO(filename, request=None, freq_req=None):
 #TobiaC (2013-06-17)
 #This function should be recast as refering to radial component instead of freq.
 def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
-                     vcoord='sph', projection='orthographic'):
+                     vcoord='sph', projection='orthographic', cmplx_rep='AbsAng', vfname=None):
     if projection == 'orthographic':
         #Fix check for theta>pi/2
         #Plot hemisphere theta<pi/2
@@ -302,25 +302,33 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         exit(1)
 
     if vcoord == 'Ludwig3':
-        E0, E1 = sph2Ludwig3(phi_rad, E_th, E_ph)
+        E0_c, E1_c = sph2Ludwig3(phi_rad, E_th, E_ph)
         compNames = ('E_u', 'E_v')
     elif vcoord == 'sph':
-        E0 = E_th
-        E1 = E_ph
+        E0_c = E_th
+        E1_c = E_ph
         compNames = ('E_theta', 'E_phi')
     elif vcoord == 'circ':
-        E0 = (E_th+1j*E_ph)/math.sqrt(2)
-        E1 = (E_th-1j*E_ph)/math.sqrt(2)
+        E0_c = (E_th+1j*E_ph)/math.sqrt(2)
+        E1_c = (E_th-1j*E_ph)/math.sqrt(2)
         compNames = ('LCP', 'RCP')
     else:
         print("Unknown vector component coord sys")
         exit(1)
+    if cmplx_rep=='ReIm':
+        cmpopname_r0, cmpopname_r1= 'Re', 'Im'
+        E0_r0, E0_r1 = numpy.real(E0_c), numpy.imag(E0_c)
+        E1_r0, E1_r1 = numpy.real(E1_c), numpy.imag(E1_c)
+    elif cmplx_rep=='AbsAng':
+        cmpopname_r0, cmpopname_r1= 'Abs', 'Arg'
+        E0_r0, E0_r1 = numpy.absolute(E0_c), numpy.rad2deg(numpy.angle(E0_c))
+        E1_r0, E1_r1 = numpy.absolute(E1_c), numpy.rad2deg(numpy.angle(E1_c))
     plt.figure()
     plt.subplot(221,polar=False)
-    Z221 = numpy.absolute(E0)
+    Z221 = E0_r0
     plt.pcolormesh(x, y, Z221)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title('abs('+compNames[0]+') @ '+str(freq/1e6)+' MHz'
+    plt.title(cmpopname_r0+'('+compNames[0]+') @ '+str(freq/1e6)+' MHz'
               +'\n'+'projection: '+projection)
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
@@ -330,10 +338,10 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
     ax.invert_yaxis()
     
     plt.subplot(222, polar=False)
-    Z222 = numpy.rad2deg(numpy.angle(E0))
+    Z222 = E0_r1
     plt.pcolormesh(x, y, Z222)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title('arg('+compNames[0]+') @ '+str(freq/1e6)+' MHz')
+    plt.title(cmpopname_r1+'('+compNames[0]+') @ '+str(freq/1e6)+' MHz')
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
@@ -342,10 +350,10 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
     ax.invert_yaxis()
     
     plt.subplot(223, polar=False)
-    Z223 = numpy.absolute(E1)
+    Z223 = E1_r0
     plt.pcolormesh(x, y, Z223)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title('abs('+compNames[1]+')')
+    plt.title(cmpopname_r0+'('+compNames[1]+')')
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
@@ -354,10 +362,10 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
     ax.invert_yaxis()
     
     plt.subplot(224, polar=False)
-    Z224 = numpy.rad2deg(numpy.angle(E1))
+    Z224 = E1_r1
     plt.pcolormesh(x, y, Z224)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title('arg('+compNames[1]+')')
+    plt.title(cmpopname_r0+'('+compNames[1]+')')
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
