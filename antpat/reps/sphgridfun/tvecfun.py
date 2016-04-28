@@ -273,7 +273,7 @@ def plotFEKO(filename, request=None, freq_req=None):
 #TobiaC (2013-06-17)
 #This function should be recast as refering to radial component instead of freq.
 def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
-                     vcoord='sph', projection='orthographic', cmplx_rep='AbsAng', vfname=None):
+                     vcoord='sph', projection='orthographic', cmplx_rep='AbsAng', vfname='Unknown'):
     if projection == 'orthographic':
         #Fix check for theta>pi/2
         #Plot hemisphere theta<pi/2
@@ -290,7 +290,7 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         #(put in offset)
         x = theta_rad*numpy.cos(phi_rad)
         y = theta_rad*numpy.sin(phi_rad)
-        xyNames = ('theta','phi')
+        xyNames = ('theta*cos(phi)','theta*sin(phi)')
         nom_xticks=None
     elif projection == 'equirectangular':
         y = numpy.rad2deg(theta_rad)
@@ -323,54 +323,54 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         cmpopname_r0, cmpopname_r1= 'Abs', 'Arg'
         E0_r0, E0_r1 = numpy.absolute(E0_c), numpy.rad2deg(numpy.angle(E0_c))
         E1_r0, E1_r1 = numpy.absolute(E1_c), numpy.rad2deg(numpy.angle(E1_c))
-    plt.figure()
-    plt.subplot(221,polar=False)
+    
+    fig = plt.figure()
+    fig.suptitle(vfname+' @ '+str(freq/1e6)+' MHz'+', '
+                 +'projection: '+projection)
+    
+    ax = plt.subplot(221,polar=False)
     Z221 = E0_r0
     plt.pcolormesh(x, y, Z221)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title(cmpopname_r0+'('+compNames[0]+') @ '+str(freq/1e6)+' MHz'
-              +'\n'+'projection: '+projection)
+    ax.set_title(cmpopname_r0+'('+compNames[0]+')')
+    
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
     plt.colorbar()
-    ax = plt.gca()
     ax.invert_yaxis()
     
-    plt.subplot(222, polar=False)
+    ax = plt.subplot(222, polar=False)
     Z222 = E0_r1
     plt.pcolormesh(x, y, Z222)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title(cmpopname_r1+'('+compNames[0]+') @ '+str(freq/1e6)+' MHz')
+    ax.set_title(cmpopname_r1+'('+compNames[0]+') @ '+str(freq/1e6)+' MHz')
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
     plt.colorbar()
-    ax = plt.gca()
     ax.invert_yaxis()
     
-    plt.subplot(223, polar=False)
+    ax = plt.subplot(223, polar=False)
     Z223 = E1_r0
     plt.pcolormesh(x, y, Z223)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title(cmpopname_r0+'('+compNames[1]+')')
+    ax.set_title(cmpopname_r0+'('+compNames[1]+')')
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
     plt.colorbar()
-    ax = plt.gca()
     ax.invert_yaxis()
     
-    plt.subplot(224, polar=False)
+    ax = plt.subplot(224, polar=False)
     Z224 = E1_r1
     plt.pcolormesh(x, y, Z224)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title(cmpopname_r1+'('+compNames[1]+')')
+    ax.set_title(cmpopname_r1+'('+compNames[1]+')')
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
     plt.colorbar()
-    ax = plt.gca()
     ax.invert_yaxis()
     
     plt.show()
