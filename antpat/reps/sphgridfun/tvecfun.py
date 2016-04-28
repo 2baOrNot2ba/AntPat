@@ -365,7 +365,7 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
     Z224 = E1_r1
     plt.pcolormesh(x, y, Z224)
     if nom_xticks is not None: plt.xticks(nom_xticks)
-    plt.title(cmpopname_r0+'('+compNames[1]+')')
+    plt.title(cmpopname_r1+'('+compNames[1]+')')
     plt.xlabel(xyNames[0])
     plt.ylabel(xyNames[1])
     plt.grid()
