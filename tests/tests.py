@@ -228,7 +228,7 @@ def dualpolelem_2FF():
     dualpolAnt = DualPolElem(antp, antq)
     rotmat = pntsonsphere.rotzmat(0*math.pi/4)
     dualpolAnt.rotateframe(rotmat)
-    dualpolAnt.plotJonesPat3D(freq)
+    dualpolAnt.plotJonesPat3D(freq, projection='azimuthal-equidistant', cmplx_rep='ReIm', )
 
 if __name__ == "__main__":
     testfuns=filter(callable, locals().values())
