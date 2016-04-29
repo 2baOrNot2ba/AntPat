@@ -23,5 +23,5 @@ setup(name = 'AntPat',
           'scipy>=0.16',
           'matplotlib>=1.5'
       ],
-      scripts = ['scripts/viewFFpat.py']
+      scripts = ['scripts/viewFFpat.py', 'scripts/viewJonespat.py']
      )

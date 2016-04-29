@@ -109,10 +109,10 @@ class DualPolElem(object):
         Eq = numpy.squeeze(JonesPat[1,:,:,:])
         tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Ep[0,:,:]),
                             numpy.squeeze(Ep[1,:,:]), freq, vcoord,
-                            projection, cmplx_rep, vfname='p-channel')
+                            projection, cmplx_rep, vfname='p-chan:'+self.radFFp.name)
         tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[0,:,:]),
                             numpy.squeeze(Eq[1,:,:]), freq, vcoord,
-                            projection, cmplx_rep, vfname='q-channel')
+                            projection, cmplx_rep, vfname='q-chan:'+self.radFFp.name)
 
 
 def plot_polcomp_dynspec(tims, frqs, jones):
