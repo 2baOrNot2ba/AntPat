@@ -18,9 +18,12 @@ def max_gain_pat(Nmax):
       c1 = a1
       cfs.setBysnm(1,n,1,a1)
       cfs.setBysnm(2,n,1,c1)
+      #LHCP
+      
     #print cfs
     vshcfs = vshField([cfs])
     return RadFarField(vshcfs)
+
 
 def dirac_beam(freqs=[0.0], direction='X'):
     """Gives a RadFarField instance with radiation only a given direction."""

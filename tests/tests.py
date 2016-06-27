@@ -94,7 +94,6 @@ def plot_simp_pat2D():
     """Test 2D plot of the tangential vector function given by the
     spherical harmonic function Psi in vsh package."""
     THETA, PHI, E_th, E_ph = gen_simp_pat()
-    print E_th
     tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph)
 
 def plot_simp_pat3D():
