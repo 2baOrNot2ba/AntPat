@@ -66,6 +66,21 @@ class DualPolElem(object):
         else:
             Jones = self.tmfd.getJonesAlong(freqval,
                                               (theta_build, phi_build) )
+            if self.basis is not None:
+                p_E_th = Jones[...,0,0]
+                p_E_ph = Jones[...,0,1]
+                q_E_th = Jones[...,1,0]
+                q_E_ph = Jones[...,1,1]
+                p_E_th, p_E_ph=tvecfun.transfVecField2RotBasis(self.basis,
+                                            (theta_build, phi_build),
+                                            (p_E_th, p_E_ph))
+                q_E_th, q_E_ph=tvecfun.transfVecField2RotBasis(self.basis,
+                                            (theta_build, phi_build),
+                                            (q_E_th, q_E_ph))
+                Jones[...,0,0] = p_E_th
+                Jones[...,0,1] = p_E_ph
+                Jones[...,1,0] = q_E_th
+                Jones[...,1,1] = q_E_ph
         return Jones
     
     def view2build_coords(self, theta_view, phi_view):
