@@ -9,20 +9,24 @@ from .reps.vsharm.coefs import Coefs as vshCoefs
 
 def max_gain_pat(Nmax):
     """Gives a RadFarField instance of a maximum gain antenna. Ref Pozar2007"""
-    cfs = vshCoefs()
-    cfs.setZeros(Nmax)
+    cfsRCP = vshCoefs()
+    cfsRCP.setZeros(Nmax)
+    cfsLCP = vshCoefs()
+    cfsLCP.setZeros(Nmax)
     alpha = 1.0
     for n in range(1,Nmax+1):
       #RHCP
       a1 = (alpha*(2*n+1))*numpy.power(1j,n-1)/numpy.sqrt(n*(n+1)) #Extra factor *n*(n+1))
       c1 = a1
-      cfs.setBysnm(1,n,1,a1)
-      cfs.setBysnm(2,n,1,c1)
+      cfsRCP.setBysnm(1,n, 1, a1)
+      cfsRCP.setBysnm(2,n, 1, c1)
       #LHCP
-      
+      cfsLCP.setBysnm(1,n,-1, a1)
+      cfsLCP.setBysnm(2,n,-1,-c1)      
     #print cfs
-    vshcfs = vshField([cfs])
-    return RadFarField(vshcfs)
+    vshcfsRCP = vshField([cfsRCP])
+    vshcfsLCP = vshField([cfsLCP])
+    return (RadFarField(vshcfsLCP), RadFarField(vshcfsRCP))
 
 
 def dirac_beam(freqs=[0.0], direction='X'):
