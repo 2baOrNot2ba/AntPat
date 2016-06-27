@@ -23,15 +23,15 @@ def ZenHemisphGrid(nrThetas=100, nrPhis=200):
     return thetamsh, phimsh
 
 
-def cut_az(azimuth, NrPnts=100):
+def cut_theta(phicut, NrPnts=100):
     """A 1D cut along a given azimuth."""
     thetas = np.linspace(0., math.pi, NrPnts)
-    phis = azimuth*np.ones(thetas.shape)
+    phis = phicut*np.ones(thetas.shape)
     return (thetas, phis)
 
 
-def cut_theta(thetacut, NrPnts=100):
-    """A 1D cut along a given azimuth."""
+def cut_phi(thetacut, NrPnts=100):
+    """A 1D cut along a given theta."""
     phis = np.linspace(0., 2*math.pi, NrPnts)
     thetas = thetacut*np.ones(phis.shape)
     return (thetas, phis)
@@ -103,5 +103,10 @@ def rotxmat(rotang):
 
 
 def rot3Dmat(rotzang1, rotxang, rotzang0):
+    """General 3D rotation matrix. Arguments follow Euler angle convention:
+    rightmost arg is first rotation angle around z, then middle arg is rotation
+    around x and leftmost is last rotation arouns z-axis.
+    (All angles in radians)
+    """
     return np.matmul(rotzmat(rotzang1), np.matmul(rotxmat(rotxang), rotzmat(rotzang0)) )
 
