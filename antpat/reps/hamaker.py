@@ -40,7 +40,8 @@ class HamakerPolarimeter(object):
     def getJonesAlong(self, freqvals, theta_phi):
         """Compute Jones matrix for given frequencies and directions.
         Input is list of frequencies in Hz and a list of theta,phi pairs;
-        and the output is Jones[polchan, comp, freq, direction]."""
+        and the output is Jones[freq, dir_th, dir_ph, polchan, comp]."""
+        mask_horizon = True
         (theta, phi) = theta_phi
         theta = numpy.array(theta)
         phi = numpy.array(phi)
@@ -66,6 +67,11 @@ class HamakerPolarimeter(object):
             response[...,1,1] += +numpy.cos(ang)*P[1,...]
             #numpy.array([[math.cos(ang)*P[0],-math.sin(ang)*P[1]],
             #             [math.sin(ang)*P[0], math.cos(ang)*P[1]]])
+        #Mask beam below horizon
+        if mask_horizon:
+            mh = numpy.ones(frqXdrn_shp+(1,1))
+            mh[...,numpy.where(theta>numpy.pi/2),0,0]=0.
+            response=mh*response
         return response
 
 
