@@ -5,6 +5,7 @@ import os
 import math
 import numpy
 import matplotlib
+import pickle
 matplotlib.use('WXAgg') #This one works
 #matplotlib.use('GTKCairo')
 import matplotlib.pyplot as plt
@@ -19,6 +20,7 @@ import antpat.theoreticalantennas
 from antpat.dualpolelem import DualPolElem
 from antpat.reps.hamaker import HamakerPolarimeter
 #import antpat.gen1dfun.Pade as Pade
+import dreambeam
 
 
 projdir = os.path.dirname(os.path.abspath('.'))
@@ -149,7 +151,7 @@ def vshreal():
 
 def maxgainpat(Nmax=10):
     """Test plot of a theoretical antenna that has a max gain pattern."""
-    mxGant = antpat.theoreticalantennas.max_gain_pat(Nmax)
+    mxGant = antpat.theoreticalantennas.max_gain_pat(Nmax)[0]
     THETA, PHI, E_th, E_ph = mxGant.getFFongrid(0.0)
     tvecfun.plotvfonsph3D(THETA, PHI, E_th, E_ph)
 
@@ -199,14 +201,15 @@ def passrotPat():
     #Get a simple linear dipole along y.
     singpol = True
     if singpol:
-        #ant = gen_simp_RadFarField()
-        ant = antpat.theoreticalantennas.max_gain_pat(4)
+        ant = gen_simp_RadFarField()
+        #ant = antpat.theoreticalantennas.max_gain_pat(4)[0]
     else:
-        ha = HamakerPolarimeter('HA_LOFAR_elresp_LBA.p')
+        dpath=dreambeam.__path__[0]+'/telescopes/LOFAR/data/'
+        ha = HamakerPolarimeter(pickle.load(open(dpath+'HA_LOFAR_elresp_LBA.p', 'rb')))
         ant = DualPolElem(ha)
     
     rotang = 1.*math.pi/4.
-    rotmat = pntsonsphere.rot3Dmat(0.0, 0.3*math.pi/2, 0.1*math.pi/2)
+    rotmat = pntsonsphere.rot3Dmat(0.0, 0.0*math.pi/2, 0.1*math.pi/2)
     #Rotate the antenna 90 deg.
     print(rotmat)
     ant.rotateframe(rotmat)
