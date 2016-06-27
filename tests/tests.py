@@ -94,6 +94,7 @@ def plot_simp_pat2D():
     """Test 2D plot of the tangential vector function given by the
     spherical harmonic function Psi in vsh package."""
     THETA, PHI, E_th, E_ph = gen_simp_pat()
+    print E_th
     tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph)
 
 def plot_simp_pat3D():
@@ -150,7 +151,6 @@ def vshreal():
 def maxgainpat(Nmax=10):
     """Test plot of a theoretical antenna that has a max gain pattern."""
     mxGant = antpat.theoreticalantennas.max_gain_pat(Nmax)
-    #mxGant.plotAntPat3D()
     THETA, PHI, E_th, E_ph = mxGant.getFFongrid(0.0)
     tvecfun.plotvfonsph3D(THETA, PHI, E_th, E_ph)
 
@@ -189,30 +189,31 @@ def passrotPat():
         E_TH = numpy.zeros(dims, dtype=complex)
         E_PH = numpy.zeros(dims, dtype=complex)
         for (cutNr, cutphi) in enumerate(cutphis):
-            (thetas, phis) = pntsonsphere.getCut(cutphi)
-            E_ths, E_phs = ant.getFFalong(1.0, (thetas, phis))
+            (thetas, phis) = pntsonsphere.cut_theta(cutphi)
+            E_ths, E_phs = ant.getFFalong(0.0, (thetas, phis))
             THETA[:,cutNr] = thetas
             PHI[:,cutNr] = phis
             E_TH[:,cutNr] = E_ths
             E_PH[:,cutNr] = E_phs
-        tvecfun.plotvfonsph(THETA, PHI, E_TH, E_PH)
+        tvecfun.plotvfonsph(THETA, PHI, E_TH, E_PH, projection='equirectangular')
     
     #Get a simple linear dipole along y.
-    singpol = False
+    singpol = True
     if singpol:
-        ant = gen_simp_RadFarField()
+        #ant = gen_simp_RadFarField()
+        ant = antpat.theoreticalantennas.max_gain_pat(4)
     else:
         ha = HamakerPolarimeter('HA_LOFAR_elresp_LBA.p')
         ant = DualPolElem(ha)
     
     rotang = 1.*math.pi/4.
-    rotmat = pntsonsphere.rot3Dmat(0.0, 0*math.pi/2, 1*math.pi/2)
+    rotmat = pntsonsphere.rot3Dmat(0.0, 0.3*math.pi/2, 0.1*math.pi/2)
     #Rotate the antenna 90 deg.
     print(rotmat)
     ant.rotateframe(rotmat)
     #Choose between next 2 lines:
-    doTrack()
-    #do3D()
+    #doTrack()
+    do3D()
 
 def dualpolelem_2FF():
     """Test plot of a dual-polarized antenna where one channel is given
