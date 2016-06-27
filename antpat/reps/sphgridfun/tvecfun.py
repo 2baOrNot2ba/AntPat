@@ -223,9 +223,16 @@ def getSph2CartTransfMatT(rvm, ISO=False):
     yu = rvmnrm[1]
     zu = rvmnrm[2]
     rb = numpy.array([xu, yu, zu])
-    angnrm = 1.0/numpy.sqrt(xu*xu+yu*yu)
+    nps=rb[2,...]==1.0
+    rho = numpy.sqrt(xu*xu+yu*yu)
+    npole = numpy.where(rho==0.)
+    rho[npole]=numpy.finfo(float).tiny
+    angnrm = 1.0/rho
     phib = angnrm*numpy.array([yu, -xu, numpy.zeros(shOfrv)])
     thetab = angnrm*numpy.array([xu*zu, yu*zu, -(xu*xu+yu*yu)])
+    if len(npole[0])>0:
+        phib[:,nps] = numpy.array([0, 1, 0])[:,None]
+        thetab[:,nps] = numpy.array([1, 0, 0])[:,None]
     #CHECK signs of basis!
     if ISO:
         transf_sph2cart = numpy.array([rb, thetab, phib])
