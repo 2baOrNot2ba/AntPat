@@ -11,7 +11,7 @@ import numpy
 from antpat import dualpolelem
 from antpat.reps.sphgridfun import tvecfun, pntsonsphere
 import matplotlib.pyplot as plt 
-
+HA_LBAfile_default = ''
 
 class HamakerPolarimeter(object):
     """This is the Hamaker polarimeter model class.""" 
@@ -69,10 +69,10 @@ class HamakerPolarimeter(object):
         return response
 
 
-def plotElemPat(frequency = 55.0e6):
+def plotElemPat(artsdata, frequency = 55.0e6):
     """Plots the HA antenna pattern over the entire Hemisphere."""
     THETA, PHI = pntsonsphere.ZenHemisphGrid() #theta=0.2rad for zenith anomaly
-    hp = HamakerPolarimeter(HA_LBAfile_default)
+    hp = HamakerPolarimeter(artsdata)
     jones=hp.getJonesAlong([frequency], (THETA, PHI) )
     EsTh = numpy.squeeze(jones[...,0,0])
     EsPh = numpy.squeeze(jones[...,0,1])
