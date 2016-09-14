@@ -5,6 +5,7 @@ import os
 import math
 import numpy
 import matplotlib
+import pickle
 matplotlib.use('WXAgg') #This one works
 #matplotlib.use('GTKCairo')
 import matplotlib.pyplot as plt
@@ -19,6 +20,7 @@ import antpat.theoreticalantennas
 from antpat.dualpolelem import DualPolElem
 from antpat.reps.hamaker import HamakerPolarimeter
 #import antpat.gen1dfun.Pade as Pade
+import dreambeam
 
 
 projdir = os.path.dirname(os.path.abspath('.'))
@@ -149,8 +151,7 @@ def vshreal():
 
 def maxgainpat(Nmax=10):
     """Test plot of a theoretical antenna that has a max gain pattern."""
-    mxGant = antpat.theoreticalantennas.max_gain_pat(Nmax)
-    #mxGant.plotAntPat3D()
+    mxGant = antpat.theoreticalantennas.max_gain_pat(Nmax)[0]
     THETA, PHI, E_th, E_ph = mxGant.getFFongrid(0.0)
     tvecfun.plotvfonsph3D(THETA, PHI, E_th, E_ph)
 
@@ -189,30 +190,32 @@ def passrotPat():
         E_TH = numpy.zeros(dims, dtype=complex)
         E_PH = numpy.zeros(dims, dtype=complex)
         for (cutNr, cutphi) in enumerate(cutphis):
-            (thetas, phis) = pntsonsphere.getCut(cutphi)
-            E_ths, E_phs = ant.getFFalong(1.0, (thetas, phis))
+            (thetas, phis) = pntsonsphere.cut_theta(cutphi)
+            E_ths, E_phs = ant.getFFalong(0.0, (thetas, phis))
             THETA[:,cutNr] = thetas
             PHI[:,cutNr] = phis
             E_TH[:,cutNr] = E_ths
             E_PH[:,cutNr] = E_phs
-        tvecfun.plotvfonsph(THETA, PHI, E_TH, E_PH)
+        tvecfun.plotvfonsph(THETA, PHI, E_TH, E_PH, projection='equirectangular')
     
     #Get a simple linear dipole along y.
-    singpol = False
+    singpol = True
     if singpol:
         ant = gen_simp_RadFarField()
+        #ant = antpat.theoreticalantennas.max_gain_pat(4)[0]
     else:
-        ha = HamakerPolarimeter('HA_LOFAR_elresp_LBA.p')
+        dpath=dreambeam.__path__[0]+'/telescopes/LOFAR/data/'
+        ha = HamakerPolarimeter(pickle.load(open(dpath+'HA_LOFAR_elresp_LBA.p', 'rb')))
         ant = DualPolElem(ha)
     
     rotang = 1.*math.pi/4.
-    rotmat = pntsonsphere.rot3Dmat(0.0, 0*math.pi/2, 1*math.pi/2)
+    rotmat = pntsonsphere.rot3Dmat(0.0, 0.0*math.pi/2, 0.1*math.pi/2)
     #Rotate the antenna 90 deg.
     print(rotmat)
     ant.rotateframe(rotmat)
     #Choose between next 2 lines:
-    doTrack()
-    #do3D()
+    #doTrack()
+    do3D()
 
 def dualpolelem_2FF():
     """Test plot of a dual-polarized antenna where one channel is given

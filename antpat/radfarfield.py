@@ -62,7 +62,7 @@ class RadFarField(object):
         thetas, phis = theta_phis
         if self.rep is "VSH":
             vshcoef=self.vshcoefs.getCoefAt(freqval)
-            E_th, E_ph=vsharm.hansens.Ksum(vshcoef, theta, phi)
+            E_th, E_ph = Ksum(vshcoef, thetas, phis)
         elif self.rep is "Grid":
             E_th, E_ph=self.tvgrids.getFalong(thetas, phis, freqval)
         if self.basis is not None:

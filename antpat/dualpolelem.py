@@ -45,11 +45,11 @@ class DualPolElem(object):
         THETA, PHI, p_E_th, p_E_ph=self.radFFp.getFFongrid(freqval)
         THETA, PHI, q_E_th, q_E_ph=self.radFFq.getFFongrid(freqval)
         
-        Jones=numpy.zeros((2,2,)+p_E_th.shape,dtype=complex)
-        Jones[0,0,...]=p_E_th
-        Jones[0,1,...]=p_E_ph
-        Jones[1,0,...]=q_E_th
-        Jones[1,1,...]=q_E_ph
+        Jones=numpy.zeros(p_E_th.shape+(2,2), dtype=complex)
+        Jones[...,0,0]=p_E_th
+        Jones[...,0,1]=p_E_ph
+        Jones[...,1,0]=q_E_th
+        Jones[...,1,1]=q_E_ph
         return THETA, PHI, Jones
     
     def getJonesAlong(self, freqval, theta_phi_view):
@@ -68,6 +68,21 @@ class DualPolElem(object):
         else:
             Jones = self.tmfd.getJonesAlong(freqval,
                                               (theta_build, phi_build) )
+            if self.basis is not None:
+                p_E_th = Jones[...,0,0]
+                p_E_ph = Jones[...,0,1]
+                q_E_th = Jones[...,1,0]
+                q_E_ph = Jones[...,1,1]
+                p_E_th, p_E_ph=tvecfun.transfVecField2RotBasis(self.basis,
+                                            (theta_build, phi_build),
+                                            (p_E_th, p_E_ph))
+                q_E_th, q_E_ph=tvecfun.transfVecField2RotBasis(self.basis,
+                                            (theta_build, phi_build),
+                                            (q_E_th, q_E_ph))
+                Jones[...,0,0] = p_E_th
+                Jones[...,0,1] = p_E_ph
+                Jones[...,1,0] = q_E_th
+                Jones[...,1,1] = q_E_ph
         return Jones
     
     def view2build_coords(self, theta_view, phi_view):
@@ -128,13 +143,13 @@ class DualPolElem(object):
                        projection='equirectangular', cmplx_rep='AbsAng'):
         """Plot the Jones pattern as two single pol antenna patterns."""
         theta_rad, phi_rad, JonesPat=self.getJonesPat(freq)
-        Ep = numpy.squeeze(JonesPat[0,:,:,:])
-        Eq = numpy.squeeze(JonesPat[1,:,:,:])
-        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Ep[0,:,:]),
-                            numpy.squeeze(Ep[1,:,:]), freq, vcoord,
+        Ep = numpy.squeeze(JonesPat[...,0,:])
+        Eq = numpy.squeeze(JonesPat[...,1,:])
+        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Ep[...,0]),
+                            numpy.squeeze(Ep[...,1]), freq, vcoord,
                             projection, cmplx_rep, vfname='p-chan:'+self.radFFp.name)
-        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[0,:,:]),
-                            numpy.squeeze(Eq[1,:,:]), freq, vcoord,
+        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[...,0]),
+                            numpy.squeeze(Eq[...,1]), freq, vcoord,
                             projection, cmplx_rep, vfname='q-chan:'+self.radFFp.name)
 
 
