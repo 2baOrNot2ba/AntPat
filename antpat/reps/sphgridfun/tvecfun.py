@@ -37,7 +37,6 @@ class TVecFields(object):
             else:
                 print "File contains multiple FFs (specify one): "+','.join(ffefile.Requests)
                 exit(1)
-        print "Request: "+request
         ffereq = ffefile.Request[request]
         self.R        = numpy.array(ffereq.freqs)
         self.thetaMsh = numpy.deg2rad(ffereq.theta)
@@ -50,10 +49,16 @@ class TVecFields(object):
         for ridx in range(nrRs):
             self.Fthetas[ridx,:,:] = ffereq.etheta[ridx]
             self.Fphis[  ridx,:,:] = ffereq.ephi[ridx]
+        #Remove redundant azimuth endpoint 2*pi
+        if ffereq.phi[0,0] == 0. and ffereq.phi[0,-1] == 360.:
+            self.thetaMsh = numpy.delete(self.thetaMsh, -1, 1)
+            self.phiMsh = numpy.delete(self.phiMsh, -1, 1)
+            self.Fthetas = numpy.delete(self.Fthetas, -1, 2)
+            self.Fphis = numpy.delete(self.Fphis, -1, 2)
     
     def getthetas(self):
       return self.thetaMsh
-
+    
     def getphis(self):
       return self.phiMsh
     
@@ -86,6 +91,10 @@ class TVecFields(object):
     
     def getFalong(self, theta_ub, phi_ub, Rval=None):
         """Get vector field for the given direction."""
+        thetadomshp=theta_ub.shape
+        phidomshp=phi_ub.shape
+        theta_ub=theta_ub.flatten()
+        phi_ub=phi_ub.flatten()
         (theta, phi) = putOnPrincBranch(theta_ub, phi_ub)
         thetaphiAxis, F_th_prdc, F_ph_prdc = periodifyRectSphGrd(self.thetaMsh,
                             self.phiMsh, self.Fthetas, self.Fphis)
@@ -104,6 +113,8 @@ class TVecFields(object):
         F_th = F_th_intrpf(rthetaphi)
         F_ph_intrpf = RegularGridInterpolator(rthetaphiAxis, F_ph_prdc)
         F_ph = F_ph_intrpf(rthetaphi)
+        F_th = F_th.reshape(thetadomshp)
+        F_ph = F_ph.reshape(thetadomshp)
         return F_th, F_ph
     
     def getAngRes(self):
