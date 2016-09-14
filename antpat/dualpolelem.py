@@ -6,6 +6,8 @@ import numpy
 import matplotlib.pyplot as plt
 import matplotlib.dates
 from antpat.reps.sphgridfun import pntsonsphere, tvecfun
+from antpat.io.feko_ffe import FEKOffe
+from antpat.radfarfield import RadFarField
 
 
 class DualPolElem(object):
@@ -15,7 +17,7 @@ class DualPolElem(object):
     """
     def __init__(self, *args):
         if len(args) == 0:
-            pass
+            self.tmfd   = None
         elif len(args) == 1:
             #"tmfd" stands for tangential matrix field on directions
             self.tmfd   = args[0]
@@ -101,6 +103,7 @@ class DualPolElem(object):
         else:
             self.basis = numpy.matmul(rotMat, self.basis)
     
+    
     def plotJonesPat3D(self, freq=0.0, vcoord='sph', 
                        projection='equirectangular', cmplx_rep='AbsAng'):
         """Plot the Jones pattern as two single pol antenna patterns."""
@@ -137,8 +140,17 @@ def plot_polcomp_dynspec(tims, frqs, jones):
     plt.show()
 
 
-def getIXRJ(jones):
+def jones2gIXR(jones):
     U,s,V=numpy.linalg.svd(jones)
-    cnd=s[0]/s[1]
+    g = (s[...,0]+s[...,1])*0.5
+    cnd=s[...,0]/s[...,1]
     IXRJ=((1+cnd)/(1-cnd))**2
-    return IXRJ
+    return g, IXRJ
+
+
+def ampgain2intensitygain(g):
+    pass
+
+def IXRJ2IXRM(IXRJ):
+    """Convert Jones IXR to Mueller IXR. See Carozzi2011."""
+    return (1+IXRJ)/(1*numpy.sqrt(IXRJ))
