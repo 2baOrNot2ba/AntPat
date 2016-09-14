@@ -103,6 +103,26 @@ class DualPolElem(object):
         else:
             self.basis = numpy.matmul(rotMat, self.basis)
     
+    def load_ffe(self, filename, request_p=None, request_q=None):
+        #FIX: This not the most efficient way to do this as it does two passes over feko file.
+        ffefile = FEKOffe(filename)
+        if request_p is None and request_q is None :
+            if len(ffefile.Requests) == 2:
+                requests = list(ffefile.Requests)
+                requests.sort() #FIX Not sure how to order requests
+                request_p = requests[0]
+                request_q = requests[1]
+            else:
+                print "File contains multiple FFs (specify one): "+','.join(ffefile.Requests)
+                exit(1)
+        print "Request_p= "+request_p
+        print "Request_q= "+request_q
+        tvf_p = tvecfun.TVecFields()
+        tvf_q = tvecfun.TVecFields()
+        tvf_p.load_ffe(filename, request_p)
+        tvf_q.load_ffe(filename, request_q)
+        self.radFFp = RadFarField(tvf_p)
+        self.radFFq = RadFarField(tvf_q)
     
     def plotJonesPat3D(self, freq=0.0, vcoord='sph', 
                        projection='equirectangular', cmplx_rep='AbsAng'):
