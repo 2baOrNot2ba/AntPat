@@ -7,11 +7,11 @@ import tvecfun
 
 
 def genDummyField():
-  thetamsh, phimsh = pntsonsphere.sphericalGrid()
-  unv = np.ones(THETA.shape)
-  discntF = tvecfun.TVecFields(thetamsh, phimsh, unv, unv) #This field is discontinous at poles!
-  return discntF
-  
+    thetamsh, phimsh = pntsonsphere.sphericalGrid()
+    unv = np.ones(thetamsh.shape)
+    discntF = tvecfun.TVecFields(thetamsh, phimsh, unv, unv) #This field is discontinous at poles!
+    return discntF
+
 def testrotToFrame():
     rotang = math.pi/4
     rotMat = np.array([[ np.cos(rotang), -np.sin(rotang), 0.],
@@ -60,6 +60,6 @@ if __name__ == "__main__":
     #printsphmsh()
     #testrot3Dmat()
     if len(sys.argv) == 2:
-      testplotFEKO(sys.argv[1])
+        testplotFEKO(sys.argv[1])
     else:
-      testplotFEKO(sys.argv[1], sys.argv[2])
+        testplotFEKO(sys.argv[1], sys.argv[2])
