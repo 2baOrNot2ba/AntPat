@@ -13,7 +13,7 @@ from antpat.dualpolelem import DualPolElem, jones2gIXR, IXRJ2IXRM
 from antpat.reps import hamaker
 import matplotlib.pyplot as plt 
 
-from dreambeam.telescopes.LOFAR.telwizhelper import read_LOFAR_HAcc, convLOFARcc2HA
+from dreambeam.telescopes.LOFAR.telwizhelper import read_LOFAR_HAcc
 import antpat.io.filetypes as antfiles
 from antpat.dualpolelem import DualPolElem
 
