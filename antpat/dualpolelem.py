@@ -118,6 +118,17 @@ class DualPolElem(object):
         else:
             self.basis = numpy.matmul(rotMat, self.basis)
     
+    def load_ffes(self, filename_p, filename_q):
+        """Load a pair of FFE and make them correspond to this DualPolElem
+        object. First file will be pol-channel p and second q."""
+        ffefile_p = FEKOffe(filename_p)
+        tvf_p = tvecfun.TVecFields()
+        tvf_q = tvecfun.TVecFields()
+        tvf_p.load_ffe(filename_p)
+        tvf_q.load_ffe(filename_q)
+        self.radFFp = RadFarField(tvf_p)
+        self.radFFq = RadFarField(tvf_q)
+    
     def load_ffe(self, filename, request_p=None, request_q=None):
         #FIX: This not the most efficient way to do this as it does two passes over feko file.
         ffefile = FEKOffe(filename)
