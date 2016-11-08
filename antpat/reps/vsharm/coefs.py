@@ -136,7 +136,7 @@ class Coefs(object):
 
 
 def load_SWE_diag(sphfilename):
-    # Reads TICRA .sph files and returns SWE coef in my diagonal format.
+    """Reads TICRA .sph files and returns SWE coef in my diagonal format."""
     fp = open(sphfilename, 'r')
     head1 = fp.readline()
     head2 = fp.readline()
@@ -170,7 +170,7 @@ def load_SWE_diag(sphfilename):
 
 
 def load_SWE2vshCoef(sphfilename, convention='SWE'):
-    # Reads TICRA .sph files and returns SWE coef in Q1Q2 format.
+    """Reads TICRA .sph files and returns SWE coef in Q1Q2 format."""
     frequency = -1.0  # In case GRASP file does not have frequency.
     fp = open(sphfilename, 'r')
     head1 = fp.readline()
@@ -246,6 +246,7 @@ def load_SWE2vshCoef(sphfilename, convention='SWE'):
 
 
 def load_SWE2vshCoef_withFreqDep(sphfilenamelist):
+    """Reads in a list of .sph files, which typically run over frequencies."""
     freqs = []
     Q12coefFreq = []
     for sphfilename in sphfilenamelist:
@@ -256,5 +257,6 @@ def load_SWE2vshCoef_withFreqDep(sphfilenamelist):
 
 
 def load_SWE2vshField(sphfilenamelist):
+    """Reads in a list of .sph files over frequency as a vshfield object."""
     Q12coefFreq, freqs = load_SWE2vshCoef_withFreqDep(sphfilenamelist)
     return vshField(Q12coefFreq, freqs)
