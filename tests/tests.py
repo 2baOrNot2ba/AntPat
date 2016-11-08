@@ -132,6 +132,7 @@ def hansen():
 def vshreal():
   """Test plot of a radiation far-field given by vsh coefficients taken
   from a SWE file."""
+  #Now provided in viewFFpat, GRASP option.
   basefile = 'Ideal_DipTE_m1.sph'
   SWEfileloc = SWEdir+basefile
   cfs, freq = load_SWE2vshCoef(SWEfileloc, convention='FEKO')

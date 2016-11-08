@@ -2,12 +2,17 @@
 """A simple viewer for legacy far-field pattern files."""
 import sys
 import argparse
+import math
+import numpy
 from urlparse import urlparse
 from antpat.reps.sphgridfun import tvecfun
+from antpat.radfarfield import RadFarField
+from antpat.reps.vsharm.vshfield import vshField
+from antpat.reps.vsharm.coefs import load_SWE2vshCoef
 
 
 FEKOsuffix = 'ffe'
-GRASPsuffix = 'swe'
+GRASPsuffix = 'sph'
 NECsuffix = 'out'
 
 
@@ -26,7 +31,18 @@ if __name__ == "__main__":
     if FFfile.endswith(FEKOsuffix):
         tvecfun.plotFEKO(FFfile, request, freq)
     elif FFfile.endswith(GRASPsuffix):
-        print("Not implemented yet.")
+        cfs, freq = load_SWE2vshCoef(FFfile, convention='FEKO')
+        antFF = RadFarField(vshField([cfs], [freq]))
+        THETA, PHI, V_th, V_ph = antFF.getFFongrid(freq)
+        c = 3.0e8
+        k = (2*math.pi*freq)/c
+        Z0 = 376.7
+        V2EfieldNrm = k*numpy.sqrt(Z0/(2*2*math.pi)) #Not sure about a 1/sqrt(2) factor
+        E_th = V2EfieldNrm*V_th
+        E_ph = V2EfieldNrm*V_ph
+        #plotAntPat2D(theta_var,phi_fix,E_th,E_ph)
+        tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, freq,
+                            vcoord='sph',projection='equirectangular')
     elif FFfile.endswith(NECsuffix):
         print("Not implemented yet.")
     else:
