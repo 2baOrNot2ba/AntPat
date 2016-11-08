@@ -1,4 +1,4 @@
 FEKOsuffix = 'ffe'
-GRASPsuffix = 'swe'
+GRASPsuffix = 'sph' #aka SWE file
 NECsuffix = 'out'
 HamArtsuffix = '.cc'

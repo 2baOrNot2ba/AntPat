@@ -171,14 +171,20 @@ def load_SWE_diag(sphfilename):
 
 def load_SWE2vshCoef(sphfilename, convention='SWE'):
 #Reads TICRA .sph files and returns SWE coef in Q1Q2 format.
+  frequency=-1.0 #In case GRASP file does not have frequency.
   fp=open(sphfilename,'r')
   head1=fp.readline()
   head2=fp.readline()
-  (NTHE,NPHI,MMAX,NMAX,bla)=[int(el) for el in fp.readline().strip().split()]
+  head3fields = fp.readline().strip().split()
+  (NTHE,NPHI,MMAX,NMAX)=[int(el) for el in head3fields[:4]]
   Q1=numpy.zeros((2*MMAX+1,NMAX),dtype=complex)
   Q2=numpy.zeros((2*MMAX+1,NMAX),dtype=complex)
-  headfreq=fp.readline().strip() # Frequency =   5.50000E+007 Hz
-  frequency=float(headfreq.split('=')[1].strip().split()[0])
+  head4=fp.readline().strip()
+  if head4.startswith('Frequency'):
+      frequency=float(head4.split('=')[1].strip().split()[0])
+  elif head4.startswith('Rotation angles'):
+     (rotang_Theta, rotang_Phi, rotang_Chi)= [
+                float(el) for el in head4.split('=')[-1].strip('()').split(',')]
   head5=fp.readline().strip()
   head6=fp.readline().strip()
   blank=fp.readline().strip()
