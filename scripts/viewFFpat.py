@@ -1,6 +1,5 @@
 #!/usr/bin/python
 """A simple viewer for legacy far-field pattern files."""
-import sys
 import argparse
 import math
 import numpy
@@ -9,11 +8,7 @@ from antpat.reps.sphgridfun import tvecfun
 from antpat.radfarfield import RadFarField
 from antpat.reps.vsharm.vshfield import vshField
 from antpat.reps.vsharm.coefs import load_SWE2vshCoef
-
-
-FEKOsuffix = 'ffe'
-GRASPsuffix = 'sph'
-NECsuffix = 'out'
+from antpat.io.filetypes import *
 
 
 if __name__ == "__main__":
