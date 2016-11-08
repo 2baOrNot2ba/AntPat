@@ -1,10 +1,9 @@
 """Vector Spherical Harmonics module. Based on my matlab functions."""
 # TobiaC 2015-07-25
-import sys
+
 import math
-import cmath
-import scipy.special
 import numpy
+from vshfield import vshField
 
 
 class Coefs(object):
@@ -242,11 +241,6 @@ def load_SWE2vshCoef(sphfilename, convention='SWE'):
         # FEKOnrm=1
         # Q1=numpy.conj(FEKOnrm*Q1)
         # Q2=numpy.conj(FEKOnrm*Q2)
-
-    else:
-        print ("Definition of output", outDef, " not known.")
-        exit(1)
-
     Q12coef = Coefs(Q1, Q2)
     return Q12coef, frequency
 
