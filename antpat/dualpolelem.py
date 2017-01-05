@@ -170,19 +170,27 @@ def plot_polcomp_dynspec(tims, frqs, jones):
     p_ch = numpy.abs(jones[:,:,0,0].squeeze())**2+numpy.abs(jones[:,:,0,1].squeeze())**2
     q_ch = numpy.abs(jones[:,:,1,1].squeeze())**2+numpy.abs(jones[:,:,1,0].squeeze())**2
     ftims=matplotlib.dates.date2num(tims)
+    dynspecunit = 'flux arb.'
+    # In dB
+    dBunit = False
+    if dBunit:
+        p_ch = 10*numpy.log10(p_ch)
+        q_ch = 10*numpy.log10(q_ch)
+        dynspecunit += ' dB'
+    dynspecunit += ' unit'
     plt.figure()
     plt.subplot(211)
-    plt.pcolormesh(numpy.asarray(tims), frqs, 10*numpy.log10(p_ch))
-    plt.title('p channel')
-    #plt.clim(-9, -3)
-    plt.colorbar()
+    plt.pcolormesh(numpy.asarray(tims), frqs, p_ch)
+    plt.title('p-channel')
+    #plt.clim(0, 1.0)
+    plt.colorbar().set_label(dynspecunit)
     plt.subplot(212)
-    plt.pcolormesh(numpy.asarray(tims), frqs, 10*numpy.log10(q_ch))
+    plt.pcolormesh(numpy.asarray(tims), frqs, q_ch)
     plt.title('q-channel')
-    #plt.clim(-9, -3)
+    #plt.clim(0, 1.0)
     plt.xlabel('Time')
     plt.ylabel('Frequency')
-    plt.colorbar()
+    plt.colorbar().set_label(dynspecunit)
     plt.show()
 
 
