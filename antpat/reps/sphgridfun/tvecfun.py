@@ -313,8 +313,8 @@ def projectdomain(theta_rad, phi_rad, F_th, F_ph, projection):
         xyNames = ('theta*cos(phi)','theta*sin(phi)')
         nom_xticks=None
     elif projection == 'equirectangular':
-        y = numpy.rad2deg(theta_rad)
-        x = numpy.rad2deg(phi_rad)
+        y = theta_rad
+        x = phi_rad
         xyNames = ('phi','theta')
         nom_xticks=None #[0,45,90,135,180,225,270,315,360]
     else:
@@ -323,23 +323,41 @@ def projectdomain(theta_rad, phi_rad, F_th, F_ph, projection):
     return x, y, xyNames, nom_xticks, F_th, F_ph
 
 
-def vcoordconvert(F_th, F_ph, phi_rad, vcoord):
+def lin2circ(vx, vy, isign=1):
+    """Convert 2-vector from linear basis to circular basis. Output order L, R.
+    isign argument chooses sign of imaginary unit in phase convention. (See Hamaker1996_III)"""
+    vl = (vx-isign*1j*vy)/math.sqrt(2)
+    vr = (vx+isign*1j*vy)/math.sqrt(2)
+    return vl, vr
+
+
+def circ2lin(vl,vr, isign=1):
+    """Convert 2-vector from circular basis to linear basis. Input order L, R.
+    isign argument chooses sign of imaginary unit in phase convention. (See Hamaker1996_III)"""
+    vx =          (vl+vr)/math.sqrt(2)
+    vy = isign*1j*(vl-vr)/math.sqrt(2)
+    return vx, vy
+
+
+def vcoordconvert(F1, F2, phi_rad, vcoordlist):
     """Convert transverse vector components of field."""
     vcoords = ['Ludwig3', 'sph', 'circ']
-    if vcoord == 'Ludwig3':
-        F0_c, F1_c = sph2Ludwig3(phi_rad, F_th, F_ph)
-        compNames = ('F_u', 'F_v')
-    elif vcoord == 'sph':
-        F0_c = F_th
-        F1_c = F_ph
-        compNames = ('F_theta', 'F_phi')
-    elif vcoord == 'circ':
-        F0_c = (F_th+1j*F_ph)/math.sqrt(2)
-        F1_c = (F_th-1j*F_ph)/math.sqrt(2)
-        compNames = ('LCP', 'RCP')
-    else:
-        raise ValueError("Unknown vector coord sys")
-    return F0_c, F1_c, compNames
+    compname =['F_', 'F_']
+    for vcoord in vcoordlist:
+        if vcoord == 'Ludwig3':
+            F1p, F2p = sph2Ludwig3(phi_rad, F1, F2)
+            compsuffix = ['u', 'v']
+        elif vcoord == 'sph':
+            F1p, F2p = F1, F2
+            compsuffix = ['theta', 'phi']
+        elif vcoord == 'circ':
+            F1p, F2p = lin2circ(F1, F2)
+            compsuffix = ['L', 'R']
+        else:
+            raise ValueError("Unknown vector coord sys")
+        compname = [compname[0]+compsuffix[0], compname[1]+compsuffix[1]]
+        F1, F2 = F1p, F2p
+    return F1, F2, compname
 
 
 def cmplx2realrep(F_c, cmplx_rep):
@@ -357,15 +375,19 @@ def cmplx2realrep(F_c, cmplx_rep):
 
 # This function should be recast as refering to radial component instead of freq.
 def plotvfonsph(theta_rad, phi_rad, F_th, F_ph, freq=0.0,
-                vcoord='sph', projection='orthographic', cmplx_rep='AbsAng',
+                vcoordlist=['sph'], projection='orthographic', cmplx_rep='AbsAng',
                 vfname='Unknown'):
     """Plot transverse vector field on sphere. Different projections are
     supported as are different bases and complex value representations."""
     x, y, xyNames, nom_xticks, F_th, F_ph = projectdomain(theta_rad, phi_rad,
                                                          F_th, F_ph, projection)
-    F0_c, F1_c, compNames =  vcoordconvert(F_th, F_ph, phi_rad, vcoord=vcoord) 
-    F0_2r, cmplxop0 = cmplx2realrep(F0_c, cmplx_rep) 
-    F1_2r, cmplxop1 = cmplx2realrep(F1_c, cmplx_rep) 
+    F0_c, F1_c, compNames =  vcoordconvert(F_th, F_ph, phi_rad, vcoordlist=vcoordlist)
+    F0_2r, cmplxop0 = cmplx2realrep(F0_c, cmplx_rep)
+    F1_2r, cmplxop1 = cmplx2realrep(F1_c, cmplx_rep)
+    if projection == 'orthographic' or projection == 'azimuthal-equidistant':
+        x = numpy.rad2deg(x)
+        y = numpy.rad2deg(y)
+        xyNames = [xyNames[0]+' [deg.]', xyNames[1]+' [deg.]']
     fig = plt.figure()
     fig.suptitle(vfname+' @ '+str(freq/1e6)+' MHz'+', '
                  +'projection: '+projection)
