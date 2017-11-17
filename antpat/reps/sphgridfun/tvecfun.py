@@ -272,7 +272,7 @@ def plotFEKO(filename, request=None, freq_req=None):
     tvf = TVecFields()
     tvf.load_ffe(filename, request)
     freqs = tvf.getRs()
-    #frqIdx = np.where(np.isclose(freqs,freq,atol=190e3))[0][0]
+    #frqIdx = numpy.where(numpy.isclose(freqs,freq,atol=190e3))[0][0]
     if freq_req is None:
         print("")
         print("No user specified frequency (will choose first in list)")
@@ -289,15 +289,15 @@ def plotFEKO(filename, request=None, freq_req=None):
 
 
 #TobiaC (2013-06-17)
-#This function should be recast as refering to radial component instead of freq.
-def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
-                     vcoord='sph', projection='orthographic', cmplx_rep='AbsAng', vfname='Unknown'):
+def projectdomain(theta_rad, phi_rad, F_th, F_ph, projection):
+    """Convert spherical coordinates into various projections."""
+    projections = ['orthographic', 'azimuthal-equidistant', 'equirectangular']
     if projection == 'orthographic':
         #Fix check for theta>pi/2
         #Plot hemisphere theta<pi/2
         UHmask = theta_rad>math.pi/2
-        E_th = numpy.ma.array(E_th, mask=UHmask)
-        E_ph = numpy.ma.array(E_ph, mask=UHmask)
+        F_th = numpy.ma.array(F_th, mask=UHmask)
+        F_ph = numpy.ma.array(F_ph, mask=UHmask)
         x = numpy.sin(theta_rad)*numpy.cos(phi_rad)
         y = numpy.sin(theta_rad)*numpy.sin(phi_rad)
         xyNames = ('l','m')
@@ -314,84 +314,87 @@ def plotvfonsph(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         y = numpy.rad2deg(theta_rad)
         x = numpy.rad2deg(phi_rad)
         xyNames = ('phi','theta')
-        nom_xticks=[0,45,90,135,180,225,270,315,360]
+        nom_xticks=None #[0,45,90,135,180,225,270,315,360]
     else:
-        print("Unknown map projection")
-        exit(1)
+        print("Supported projections are: {}".format(', '.join(projections)))
+        raise ValueError("Unknown map projection: {}".format(projection))
+    return x, y, xyNames, nom_xticks, F_th, F_ph
 
+
+def vcoordconvert(F_th, F_ph, phi_rad, vcoord):
+    """Convert transverse vector components of field."""
+    vcoords = ['Ludwig3', 'sph', 'circ']
     if vcoord == 'Ludwig3':
-        E0_c, E1_c = sph2Ludwig3(phi_rad, E_th, E_ph)
-        compNames = ('E_u', 'E_v')
+        F0_c, F1_c = sph2Ludwig3(phi_rad, F_th, F_ph)
+        compNames = ('F_u', 'F_v')
     elif vcoord == 'sph':
-        E0_c = E_th
-        E1_c = E_ph
-        compNames = ('E_theta', 'E_phi')
+        F0_c = F_th
+        F1_c = F_ph
+        compNames = ('F_theta', 'F_phi')
     elif vcoord == 'circ':
-        E0_c = (E_th+1j*E_ph)/math.sqrt(2)
-        E1_c = (E_th-1j*E_ph)/math.sqrt(2)
+        F0_c = (F_th+1j*F_ph)/math.sqrt(2)
+        F1_c = (F_th-1j*F_ph)/math.sqrt(2)
         compNames = ('LCP', 'RCP')
     else:
-        print("Unknown vector component coord sys")
-        exit(1)
+        raise ValueError("Unknown vector coord sys")
+    return F0_c, F1_c, compNames
+
+
+def cmplx2realrep(F_c, cmplx_rep):
+    """Complex to real representation"""
     if cmplx_rep=='ReIm':
         cmpopname_r0, cmpopname_r1= 'Re', 'Im'
-        E0_r0, E0_r1 = numpy.real(E0_c), numpy.imag(E0_c)
-        E1_r0, E1_r1 = numpy.real(E1_c), numpy.imag(E1_c)
+        F_r0, F_r1 = numpy.real(F_c), numpy.imag(F_c)
     elif cmplx_rep=='AbsAng':
-        cmpopname_r0, cmpopname_r1= 'Abs', 'Arg'
-        E0_r0, E0_r1 = numpy.absolute(E0_c), numpy.rad2deg(numpy.angle(E0_c))
-        E1_r0, E1_r1 = numpy.absolute(E1_c), numpy.rad2deg(numpy.angle(E1_c))
-    
+        cmpopname_r0, cmpopname_r1= 'Abs', 'Ang'
+        F_r0, F_r1 = numpy.absolute(F_c), numpy.rad2deg(numpy.angle(F_c))
+    else:
+        raise ValueError("Complex representation not known")
+    return (F_r0, F_r1), (cmpopname_r0, cmpopname_r1)
+
+
+#This function should be recast as refering to radial component instead of freq.
+def plotvfonsph(theta_rad, phi_rad, F_th, F_ph, freq=0.0,
+                vcoord='sph', projection='orthographic', cmplx_rep='AbsAng',
+                vfname='Unknown'):
+    """Plot transverse vector field on sphere. Different projections are
+    supported as are different bases and complex value representations."""
+    x, y, xyNames, nom_xticks, F_th, F_ph = projectdomain(theta_rad, phi_rad,
+                                                         F_th, F_ph, projection)
+    F0_c, F1_c, compNames =  vcoordconvert(F_th, F_ph, phi_rad, vcoord=vcoord) 
+    F0_2r, cmplxop0 = cmplx2realrep(F0_c, cmplx_rep) 
+    F1_2r, cmplxop1 = cmplx2realrep(F1_c, cmplx_rep) 
     fig = plt.figure()
     fig.suptitle(vfname+' @ '+str(freq/1e6)+' MHz'+', '
                  +'projection: '+projection)
     
+    def plotcomp(vcmpi, cpi, zcomp, cmplxop, xyNames, nom_xticks):
+        if cmplxop[cpi] == 'Ang':
+            cmap = plt.get_cmap('hsv')
+        else:
+            cmap = plt.get_cmap('viridis')
+        plt.pcolormesh(x, y, zcomp[cpi], cmap=cmap)
+        if nom_xticks is not None: plt.xticks(nom_xticks)
+        # FIX next line
+        ax.set_title(cmplxop[cpi]+'('+compNames[vcmpi]+')')
+        plt.xlabel(xyNames[0])
+        plt.ylabel(xyNames[1])
+        plt.grid()
+        plt.colorbar()
+        if projection is not 'orthographic':
+            ax.invert_yaxis()
+    
     ax = plt.subplot(221,polar=False)
-    Z221 = E0_r0
-    plt.pcolormesh(x, y, Z221)
-    if nom_xticks is not None: plt.xticks(nom_xticks)
-    ax.set_title(cmpopname_r0+'('+compNames[0]+')')
-    
-    plt.xlabel(xyNames[0])
-    plt.ylabel(xyNames[1])
-    plt.grid()
-    plt.colorbar()
-    ax.invert_yaxis()
-    
-    ax = plt.subplot(222, polar=False)
-    Z222 = E0_r1
-    plt.pcolormesh(x, y, Z222)
-    if nom_xticks is not None: plt.xticks(nom_xticks)
-    ax.set_title(cmpopname_r1+'('+compNames[0]+') @ '+str(freq/1e6)+' MHz')
-    plt.xlabel(xyNames[0])
-    plt.ylabel(xyNames[1])
-    plt.grid()
-    plt.colorbar()
-    ax.invert_yaxis()
-    
-    ax = plt.subplot(223, polar=False)
-    Z223 = E1_r0
-    plt.pcolormesh(x, y, Z223)
-    if nom_xticks is not None: plt.xticks(nom_xticks)
-    ax.set_title(cmpopname_r0+'('+compNames[1]+')')
-    plt.xlabel(xyNames[0])
-    plt.ylabel(xyNames[1])
-    plt.grid()
-    plt.colorbar()
-    ax.invert_yaxis()
-    
-    ax = plt.subplot(224, polar=False)
-    Z224 = E1_r1
-    plt.pcolormesh(x, y, Z224)
-    if nom_xticks is not None: plt.xticks(nom_xticks)
-    ax.set_title(cmpopname_r1+'('+compNames[1]+')')
-    plt.xlabel(xyNames[0])
-    plt.ylabel(xyNames[1])
-    plt.grid()
-    plt.colorbar()
-    ax.invert_yaxis()
+    plotcomp(0, 0, F0_2r, cmplxop0, xyNames, nom_xticks)
+    ax = plt.subplot(222,polar=False)
+    plotcomp(0, 1, F0_2r, cmplxop0, xyNames, nom_xticks)
+    ax = plt.subplot(223,polar=False)
+    plotcomp(1, 0, F1_2r, cmplxop1, xyNames, nom_xticks)
+    ax = plt.subplot(224,polar=False)
+    plotcomp(1, 1, F1_2r, cmplxop1, xyNames, nom_xticks)
     
     plt.show()
+
 
 def plotvfonsph3D(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
                      vcoord='sph', projection='equirectangular'):
@@ -406,7 +409,7 @@ def plotvfonsph3D(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         r_Etmx = numpy.amax(r_Et)
         mlab.mesh(r_Et*(x)-1*r_Etmx, r_Et*y, r_Et*z, scalars=r_Et)
         r_Ep = numpy.abs(E_ph)
-        r_Epmx = numpy.amax(r_Eph)
+        r_Epmx = numpy.amax(r_Ep)
         mlab.mesh(r_Ep*(x)+1*r_Epmx , r_Ep*y, r_Ep*z, scalars=r_Ep)
     elif PLOT3DTYPE == "quiver":
         ##Implement quiver plot
@@ -425,6 +428,7 @@ def plotvfonsph3D(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
                       numpy.imag(E_fldcrt[2]))              
     mlab.show()
 
+
 def sph2Ludwig3(azl, EsTh, EsPh):
     """Input: an array of theta components and an array of phi components.
     Output: an array of Ludwig u components and array Ludwig v.
@@ -432,6 +436,7 @@ def sph2Ludwig3(azl, EsTh, EsPh):
     EsU = EsTh*numpy.sin(azl)+EsPh*numpy.cos(azl)
     EsV = EsTh*numpy.cos(azl)-EsPh*numpy.sin(azl)
     return EsU, EsV
+
 
 def Ludwig32sph(azl, EsU, EsV):
     EsTh = EsU*numpy.sin(azl)+EsV*numpy.cos(azl)
