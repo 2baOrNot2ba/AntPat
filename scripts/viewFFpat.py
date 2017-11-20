@@ -3,6 +3,7 @@
 import argparse
 import math
 import numpy
+import os.path
 from urlparse import urlparse
 from antpat.reps.sphgridfun import tvecfun
 from antpat.radfarfield import RadFarField
@@ -24,7 +25,21 @@ if __name__ == "__main__":
     if request == '': request = None
     freq = args.freq
     if FFfile.endswith(FEKOsuffix):
-        tvecfun.plotFEKO(FFfile, request, freq)
+        #tvecfun.plotFEKO(FFfile, request, freq)
+        from antpat.reps.sphgridfun.tvecfun import TVecFields, plotvfonsph
+        tvf = TVecFields()
+        tvf.load_ffe(FFfile, request)
+        freqs = tvf.getRs()
+        if freq is None:
+            frqIdx = 0
+        else:
+            frqIdx = int(numpy.interp(freq, freqs, range(len(freqs))))
+        freq = freqs[frqIdx]
+        print("Frequency={}".format(freq))
+        (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(), tvf.getFthetas(freq), tvf.getFphis(freq))
+        plotvfonsph(THETA, PHI, E_th, E_ph, freq,
+                    vcoordlist=['Ludwig3','circ'], projection='azimuthal-equidistant',
+                    cmplx_rep='AbsAng', vfname=os.path.basename(FFfile))
     elif FFfile.endswith(GRASPsuffix):
         cfs, freq = load_SWE2vshCoef(FFfile, convention='FEKO')
         antFF = RadFarField(vshField([cfs], [freq]))
