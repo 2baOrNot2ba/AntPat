@@ -37,7 +37,7 @@ if __name__ == "__main__":
         freq = freqs[frqIdx]
         print("Frequency={}".format(freq))
         (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(), tvf.getFthetas(freq), tvf.getFphis(freq))
-        plotvfonsph(THETA, PHI, E_th, E_ph, freq,
+        tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, freq=freq,
                     vcoordlist=['Ludwig3','circ'], projection='azimuthal-equidistant',
                     cmplx_rep='AbsAng', vfname=os.path.basename(FFfile))
     elif FFfile.endswith(GRASPsuffix):
