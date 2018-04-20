@@ -341,7 +341,7 @@ def circ2lin(vl,vr, isign=1):
 
 def vcoordconvert(F1, F2, phi_rad, vcoordlist):
     """Convert transverse vector components of field."""
-    vcoords = ['Ludwig3', 'sph', 'circ']
+    vcoords = ['Ludwig3', 'sph', 'circ', 'lin']
     compname =['F_', 'F_']
     for vcoord in vcoordlist:
         if vcoord == 'Ludwig3':
@@ -353,6 +353,9 @@ def vcoordconvert(F1, F2, phi_rad, vcoordlist):
         elif vcoord == 'circ':
             F1p, F2p = lin2circ(F1, F2)
             compsuffix = ['L', 'R']
+        elif vcoord == 'lin':
+            F1p, F2p = circ2lin(F1, F2)
+            compsuffix = ['X', 'Y']
         else:
             raise ValueError("Unknown vector coord sys")
         compname = [compname[0]+compsuffix[0], compname[1]+compsuffix[1]]
