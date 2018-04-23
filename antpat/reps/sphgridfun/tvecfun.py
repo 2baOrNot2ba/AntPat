@@ -1,10 +1,11 @@
 import math
 import numpy
 import numpy.ma
+import datetime
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
 from pntsonsphere import sph2crtISO, crt2sphHorizontal
-from antpat.io.feko_ffe import FEKOffe
+from antpat.io.feko_ffe import FEKOffe, FEKOffeRequest
 
 class TVecFields(object):
     """Provides a tangetial vector function on a spherical grid. The
@@ -55,6 +56,47 @@ class TVecFields(object):
             self.phiMsh = numpy.delete(self.phiMsh, -1, 1)
             self.Fthetas = numpy.delete(self.Fthetas, -1, 2)
             self.Fphis = numpy.delete(self.Fphis, -1, 2)
+    
+    def save_ffe(self, filename, request='FarField', source='Unknown'):
+        """ """
+        ffefile = FEKOffe()
+        ffefile.ftype = 'Far Field'
+        ffefile.fformat = '3'
+        ffefile.source = source
+        ffefile.date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # Setup request
+        ffereq = FEKOffeRequest(request)
+        if self.R is not None:
+            freqs = self.R
+        else:
+            freqs = [0.0]
+        ffereq.theta   = numpy.rad2deg(self.thetaMsh)
+        ffereq.phi     = numpy.rad2deg(self.phiMsh)
+        coord = 'Spherical'
+        stheta = ffereq.theta.shape[0]
+        sphi = ffereq.phi.shape[1]
+        rtype = 'Gain'
+        for ridx in range(len(freqs)):
+            ffereq._add_head(freqs[ridx], coord, stheta, sphi, rtype)
+            if self.R is not None:
+                ffereq.etheta.append(self.Fthetas[ridx,:,:].squeeze())
+                ffereq.ephi.append(  self.Fphis[  ridx,:,:].squeeze())
+                gtheta = numpy.abs(self.Fthetas[ridx,:,:].squeeze())**2
+                gphi = numpy.abs(self.Fphis[  ridx,:,:].squeeze())**2
+            else:
+                ffereq.etheta.append(self.Fthetas)
+                ffereq.ephi.append(  self.Fphis)
+                gtheta = numpy.abs(self.Fthetas)**2
+                gphi = numpy.abs(self.Fphis)**2
+            gtotal = gtheta + gphi
+            ffereq.gtheta.append(gtheta)
+            ffereq.gphi.append(  gphi)
+            ffereq.gtotal.append(gtotal)
+        # Add redundant azimuth endpoint 2*pi ?
+
+        ffefile.Requests.add(request)
+        ffefile.Request[request] = ffereq
+        ffefile.write(filename)
     
     def getthetas(self):
         return self.thetaMsh

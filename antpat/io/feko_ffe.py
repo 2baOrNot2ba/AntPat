@@ -39,11 +39,11 @@ class FEKOffeRequest(object):
 class FEKOffe(object):
     """A FEKOffe object holds the data contained in a FEKO .ffe file.
     This consists of one or more FEKOffeRequest ."""
-    def __init__(self, fn, ftype='ascii'):
+    def __init__(self, fn=None, ftype='ascii'):
         self.comments = []
         self.Requests = set()
         self.Request = {}
-        if ftype.startswith('ascii'):
+        if fn is not None and ftype.startswith('ascii'):
            self.read(fn)
     
     def read(self, ffefile):
@@ -134,7 +134,7 @@ class FEKOffe(object):
         ostr+='##Source: '+self.source+'\n'
         ostr+='##Date: '+self.date+'\n'
         ostr+='**'+'\n'.join(self.comments)+'\n'
-        ostr+='** '+'File exported by feko_ff.py'+'\n'
+        ostr+='** '+'File exported by AntPat'+'\n'
         for req in self.Requests:
             f = self.Request[req]
             line_end_pad = '   \n'

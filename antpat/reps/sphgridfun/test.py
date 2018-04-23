@@ -53,12 +53,18 @@ def testplotFEKO(filename, request=None):
     (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(), tvf.getFthetas(freq), tvf.getFphis(freq))
     tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, freq, vcoord='Ludwig3', projection='orthographic')
 
+def testsaveFEKO(filename):
+    tvf = genDummyField()
+    tvf.save_ffe(filename)
+
 if __name__ == "__main__":
     #genDummyField()
     #testgetSphBasis()
     #testrotToFrame()
     #printsphmsh()
     #testrot3Dmat()
+    testsaveFEKO('bla.ffe')
+    sys.exit()
     if len(sys.argv) == 2:
         testplotFEKO(sys.argv[1])
     else:
