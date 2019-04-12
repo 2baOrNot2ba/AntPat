@@ -8,7 +8,7 @@ setup(name = 'AntPat',
       author = 'Tobia D. Carozzi',
       author_email = 'tobia.carozzi@chalmers.se',
       packages = find_packages(exclude=('tests', 'docs')),
-      license = 'MIT',
+      license = 'ISC',
       classifiers = [
           'Development Status :: 1 - Planning',
           'Intended Audience :: Telecommunications Industry',
@@ -21,7 +21,7 @@ setup(name = 'AntPat',
       install_requires=[
           'numpy>=1.10',
           'scipy>=0.16',
-          'matplotlib>=1.5'
+          'matplotlib'
       ],
       scripts = ['scripts/viewFFpat.py', 'scripts/viewJonespat.py']
      )
