@@ -6,7 +6,7 @@ import math
 import numpy
 import matplotlib
 import pickle
-matplotlib.use('WXAgg') #This one works
+matplotlib.use('WXAgg') # Maybe comment this out.
 #matplotlib.use('GTKCairo')
 import matplotlib.pyplot as plt
 from antpat.radfarfield import RadFarField
@@ -62,17 +62,17 @@ def vsh_pat_freq():
   theta = numpy.linspace(0.0,math.pi,num=100)
   phi = numpy.linspace(0.0,2*math.pi,num=100)
   PHI, THETA = numpy.meshgrid(phi,theta)
-  
+
   vc = vshCoefs()
   vc.setZeros(1)
-  
+
   vc.setBysnm(1, 1,-1, Pade.Approximant([1.0],[1.0,-1.0+0.1j]).valAt)
   vc.setBysnm(1, 1, 0, Pade.Approximant([0.0],[1.0,-1.0+0.1j]).valAt)
   vc.setBysnm(1, 1, 1, Pade.Approximant([-1.0],[1.0,-1.0+0.0j]).valAt)
   vc.setBysnm(2, 1,-1, Pade.Approximant([1.0j],[1.0,-1.0+0.1j]).valAt)
   vc.setBysnm(2, 1, 0, Pade.Approximant([0.0],[1.0,-1.0+0.1j]).valAt)
   vc.setBysnm(2, 1, 1, Pade.Approximant([1.0j],[1.0,-1.0+0.1j]).valAt)
-  
+
   E_th, E_ph = vsh.vsfun(vc, THETA, PHI, f=0.1)
   tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph)
 
@@ -181,7 +181,7 @@ def passrotPat():
             j10=jones[...,1,0].squeeze()
             j11=jones[...,1,1].squeeze()
             tvecfun.plotAntPat2D(phis, j10, j11, freq)
-        
+
     def do3D():
         cutphis = numpy.arange(0, 2*math.pi, .2)
         nrLngs = len(cutphis)
@@ -198,7 +198,7 @@ def passrotPat():
             E_TH[:,cutNr] = E_ths
             E_PH[:,cutNr] = E_phs
         tvecfun.plotvfonsph(THETA, PHI, E_TH, E_PH, projection='equirectangular')
-    
+
     #Get a simple linear dipole along y.
     singpol = True
     if singpol:
@@ -208,7 +208,7 @@ def passrotPat():
         dpath=dreambeam.__path__[0]+'/telescopes/LOFAR/data/'
         ha = HamakerPolarimeter(pickle.load(open(dpath+'HA_LOFAR_elresp_LBA.p', 'rb')))
         ant = DualPolElem(ha)
-    
+
     rotang = 1.*math.pi/4.
     rotmat = pntsonsphere.rot3Dmat(0.0, 0.0*math.pi/2, 0.1*math.pi/2)
     #Rotate the antenna 90 deg.
