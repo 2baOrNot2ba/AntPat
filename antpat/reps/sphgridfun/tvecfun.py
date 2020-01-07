@@ -14,7 +14,7 @@ class TVecFields(object):
     def __init__(self, *args):
         if len(args) > 0:
             self._full_init(*args)
-    
+
     def _full_init(self, thetaMsh, phiMsh, F1, F2, R=None, basisType='polar'):
         self.R = R
         self.thetaMsh = thetaMsh # Assume thetaMsh is repeated columns
@@ -29,7 +29,7 @@ class TVecFields(object):
         else:
             print("Error: Unknown basisType {}".format(basisType))
             exit(1)
-    
+
     def load_ffe(self, filename, request=None):
         ffefile = FEKOffe(filename)
         if request is None:
@@ -56,7 +56,7 @@ class TVecFields(object):
             self.phiMsh = numpy.delete(self.phiMsh, -1, 1)
             self.Fthetas = numpy.delete(self.Fthetas, -1, 2)
             self.Fphis = numpy.delete(self.Fphis, -1, 2)
-    
+
     def save_ffe(self, filename, request='FarField', source='Unknown'):
         """ """
         ffefile = FEKOffe()
@@ -97,40 +97,39 @@ class TVecFields(object):
         ffefile.Requests.add(request)
         ffefile.Request[request] = ffereq
         ffefile.write(filename)
-    
+
     def getthetas(self):
         return self.thetaMsh
-    
+
     def getphis(self):
         return self.phiMsh
-    
+
     def getFthetas(self, Rval=.0):
         Rind=self.getRind(Rval)
         if Rind == None:
             return self.Fthetas
         else:
             return numpy.squeeze(self.Fthetas[Rind,...])
-    
+
     def getFphis(self, Rval=0.):
         Rind=self.getRind(Rval)
         if Rind == None:
             return self.Fphis
         else:
             return numpy.squeeze(self.Fphis[Rind,...])
-    
+
     def getFgridAt(self, R):
         return (self.getFthetas(R), self.getFphis(R) )
-    
+
     def getRs(self):
         return self.R
-    
+
     def getRind(self, Rval):
         if self.R is None or type(self.R) is float:
             return None
-        Rindlst = numpy.where(self.R==Rval)
-        Rind = Rindlst[0][0] #For now assume unique value.
-        return Rind
-    
+        r_idx = (numpy.abs(self.R-Rval)).argmin()
+        return r_idx
+
     def getFalong(self, theta_ub, phi_ub, Rval=None):
         """Get vector field for the given direction."""
         thetadomshp = theta_ub.shape
@@ -158,13 +157,13 @@ class TVecFields(object):
         F_th = F_th.reshape(thetadomshp)
         F_ph = F_ph.reshape(thetadomshp)
         return F_th, F_ph
-    
+
     def getAngRes(self):
         """Get angular resolution of mesh grid."""
         resol_th = self.thetaMsh[1,0]-self.thetaMsh[0,0]
         resol_ph = self.phiMsh[0,1]-self.phiMsh[0,0]
         return resol_th, resol_ph
-      
+
     def sphinterp_my(self, theta, phi):
         # Currently this uses nearest value. No interpolation!
         resol_th, resol_ph  = self.getAngRes()
@@ -177,11 +176,11 @@ class TVecFields(object):
         F_th = self.Fthetas[ind0,ind1]
         F_ph=  self.Fphis[ind0,ind1]
         return F_th, F_ph
-    
+
     def rotate90z(self, sense=+1):
         self.phiMsh = self.phiMsh+sense*math.pi/2
         self.canonicalizeGrid()
-    
+
     def canonicalizeGrid(self):
         """Put the grid into a canonical order so that azimuth goes from 0:2*pi."""
         # For now only azimuths.
@@ -198,7 +197,7 @@ class TVecFields(object):
 
 def periodifyRectSphGrd(thetaMsh, phiMsh, F1, F2):
     """Create a 'periodic' function in azimuth."""
-    # theta is assumed to be on [0,pi] but phi on [0,2*pi[. 
+    # theta is assumed to be on [0,pi] but phi on [0,2*pi[.
     thetaAx0 = thetaMsh[:,0].squeeze()
     phiAx0 = phiMsh[0,:].squeeze()
     phiAx = phiAx0.copy()
@@ -240,10 +239,10 @@ def getSph2CartTransfMat(rvm, ISO=False):
     basis at the field point given by the input 'r'. If input 'r' is an array
     with dim>1 then the last dimension holds the r vector components.
     The output 'transf_sph2cart' is defined such that:
-    
+
     [[v_x], [v_y], [v_z]]=transf_sph2cart*matrix([[v_r], [v_phi], [v_theta]]).
     for non-ISO case.
-    
+
     Returns transf_sph2cart[si,ci,bi] where si,ci,bi are the sample index,
     component index, and basis index resp.
     The indices bi=0,1,2 map to r,phi,theta for non-ISO otherwise they map to
@@ -264,7 +263,7 @@ def getSph2CartTransfMat(rvm, ISO=False):
         transf_sph2cart = numpy.array([rb, phib, thetab])
     # Transpose the result to get output as stack of transform matrices:
     transf_sph2cart = numpy.transpose(transf_sph2cart, (2,1,0))
-    
+
     return transf_sph2cart
 
 
@@ -429,14 +428,16 @@ def plotvfonsph(theta_rad, phi_rad, F_th, F_ph, freq=0.0,
     F0_c, F1_c, compNames =  vcoordconvert(F_th, F_ph, phi_rad, vcoordlist=vcoordlist)
     F0_2r, cmplxop0 = cmplx2realrep(F0_c, cmplx_rep)
     F1_2r, cmplxop1 = cmplx2realrep(F1_c, cmplx_rep)
-    if projection == 'orthographic' or projection == 'azimuthal-equidistant':
+    if projection == 'orthographic':
+        xyNames = [xyNames[0]+' []', xyNames[1]+' []']
+    if projection == 'azimuthal-equidistant':
         x = numpy.rad2deg(x)
         y = numpy.rad2deg(y)
         xyNames = [xyNames[0]+' [deg.]', xyNames[1]+' [deg.]']
     fig = plt.figure()
     fig.suptitle(vfname+' @ '+str(freq/1e6)+' MHz'+', '
                  +'projection: '+projection)
-    
+
     def plotcomp(vcmpi, cpi, zcomp, cmplxop, xyNames, nom_xticks):
         if cmplxop[cpi] == 'Ang':
             cmap = plt.get_cmap('hsv')
@@ -450,9 +451,9 @@ def plotvfonsph(theta_rad, phi_rad, F_th, F_ph, freq=0.0,
         plt.ylabel(xyNames[1])
         plt.grid()
         plt.colorbar()
-        if projection is not 'orthographic':
+        if projection == 'equirectangular':
             ax.invert_yaxis()
-    
+
     ax = plt.subplot(221,polar=False)
     plotcomp(0, 0, F0_2r, cmplxop0, xyNames, nom_xticks)
     ax = plt.subplot(222,polar=False)
@@ -461,7 +462,7 @@ def plotvfonsph(theta_rad, phi_rad, F_th, F_ph, freq=0.0,
     plotcomp(1, 0, F1_2r, cmplxop1, xyNames, nom_xticks)
     ax = plt.subplot(224,polar=False)
     plotcomp(1, 1, F1_2r, cmplxop1, xyNames, nom_xticks)
-    
+
     plt.show()
 
 
@@ -470,7 +471,7 @@ def plotvfonsph3D(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
     PLOT3DTYPE = "quiver"
     (x, y, z) = sph2crtISO(theta_rad, phi_rad)
     from mayavi import mlab
-    
+
     mlab.figure(1, bgcolor=(1, 1, 1), fgcolor=(0, 0, 0), size=(400, 300))
     mlab.clf()
     if PLOT3DTYPE == "MESH_RADIAL" :
@@ -494,7 +495,7 @@ def plotvfonsph3D(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
         mlab.quiver3d(x-1.5, y, z,
                       numpy.imag(E_fldcrt[0]),
                       numpy.imag(E_fldcrt[1]),
-                      numpy.imag(E_fldcrt[2]))              
+                      numpy.imag(E_fldcrt[2]))
     mlab.show()
 
 
