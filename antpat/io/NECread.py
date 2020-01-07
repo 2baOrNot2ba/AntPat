@@ -59,11 +59,15 @@ def _readNECout_datacards(fp):
     datacards = {}
     datacardsIdx = {}
     datacardCardinal = 0
+    datacard_markers = ['DATA CARD No:', '***** INPUT LINE']
     for line in fp:
-        if 'DATA CARD' in line:
+        if any(marker in line for marker in datacard_markers):
+            line = line.lstrip()
+            for marker in datacard_markers:
+                line = line.lstrip(marker)
             line = line.rstrip()
             datacardCardinal += 1
-            datacard, dcparams = line.split(':')
+            dcparams = line
             dcNr, dcType, dcTypeParams = dcparams.split(None, 2)
             datacardsIdx[dcNr] = datacardCardinal
             datacards[dcType] = dcTypeParams.split()
@@ -83,8 +87,9 @@ def _readNECout_FFnextFreq(fp):
         if "- FREQUENCY -" in aline:
             freqline = ""
             while not freqline:
-              freqline = fp.readline().strip()
-            freqlbl, freqSep, freqStr, freqUnit = freqline.split()
+                freqline = fp.readline().strip()
+            freqlinelst = freqline.split()
+            freqStr, freqUnit = freqlinelst[-2:]
             freq = float(freqStr)
             if freqUnit == 'Hz':
                 freq = freq*1
@@ -130,11 +135,13 @@ def _readNECout_FFnextFreq(fp):
                                )
     phiMsh = numpy.transpose(numpy.array(phiList).reshape(NrPhis, NrThetas))
     EthetaA = numpy.transpose((numpy.array(EthetaMagList)
-                               * numpy.exp(1j*numpy.array(EthetaPhsList)
-                               *numpy.pi/180)).reshape(NrPhis, NrThetas))
+                               * numpy.exp(1j*numpy.deg2rad(
+                                 numpy.array(EthetaPhsList))))
+                              .reshape(NrPhis, NrThetas))
     EphiA = numpy.transpose((numpy.array(EphiMagList)
-                             * numpy.exp(1j*numpy.array(EphiPhsList)
-                             * numpy.pi/180)).reshape(NrPhis, NrThetas))
+                             * numpy.exp(1j*numpy.deg2rad(
+                               numpy.array(EphiPhsList))))
+                            .reshape(NrPhis, NrThetas))
     return freq, thetaMsh, phiMsh, EthetaA, EphiA
 
 
@@ -142,4 +149,5 @@ if __name__ == "__main__":
 
     filename = sys.argv[1]
     frequencies, thetaMsh, phiMsh, Etheta, Ephi = readNECout_FF(filename)
-    print(Etheta)
+    print(frequencies)
+    print(Etheta.shape)
