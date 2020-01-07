@@ -11,7 +11,7 @@ from antpat.reps.sphgridfun.pntsonsphere import ZenHemisphGrid
 from antpat.radfarfield import RadFarField
 from antpat.dualpolelem import DualPolElem, jones2gIXR, IXRJ2IXRM
 from antpat.reps import hamaker
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 
 from dreambeam.telescopes.LOFAR.telwizhelper import read_LOFAR_HAcc
 import antpat.io.filetypes as antfiles
@@ -22,7 +22,7 @@ def plotJonesCanonical(theta, phi, jones, dpelemname):
     dbscale = True
     polarplt = True
     IXRTYPE = 'IXR_J' #Can be IXR_J or IXR_M
-    
+
     g, IXRJ = jones2gIXR(jones)
     IXRM=IXRJ2IXRM(IXRJ)
     if IXRTYPE == 'IXR_J':
@@ -32,7 +32,7 @@ def plotJonesCanonical(theta, phi, jones, dpelemname):
     else:
         print "Error: IXR type {} unknown. Known types are IXR_J, IXR_M.".format(IXRTYPE)
         exit(1)
-    
+
     fig = plt.figure()
     fig.suptitle(dpelemname)
     plt.subplot(121,polar=polarplt)
@@ -53,6 +53,12 @@ def plotJonesCanonical(theta, phi, jones, dpelemname):
     plt.title('IXR_J')
     plt.show()
 
+def plotFFpat():
+    E_th = jones[:,:,0,0].squeeze()
+    E_ph = jones[:,:,0,1].squeeze()
+    from antpat.reps.sphgridfun import tvecfun
+    tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, args.freq,
+                        vcoordlist=['Ludwig3'],projection='orthographic')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -63,7 +69,7 @@ if __name__ == "__main__":
     parser.add_argument("filename_q", nargs='?',
                  help='Filename of second (q-channel) single-polarization FF.')
     args = parser.parse_args()
-    
+
     if args.filename.endswith(antfiles.HamArtsuffix):
         artsdata = read_LOFAR_HAcc(args.filename)
         artsdata['channels'] = [args.freq]
@@ -76,5 +82,7 @@ if __name__ == "__main__":
         exit(1)
     THETA, PHI = ZenHemisphGrid()
     jones=hp.getJonesAlong([args.freq], (THETA, PHI) )
+    plotFFpat()
+    exit()
     plotJonesCanonical(THETA, PHI, jones, os.path.basename(args.filename)
                        +' ('+str(args.freq/1e6)+' MHz)')
