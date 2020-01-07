@@ -10,12 +10,12 @@ import scipy.special
 import numpy
 from antpat import dualpolelem
 from antpat.reps.sphgridfun import tvecfun, pntsonsphere
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 HA_LBAfile_default = ''
 
 class HamakerPolarimeter(object):
-    """This is the Hamaker polarimeter model class.""" 
-    
+    """This is the Hamaker polarimeter model class."""
+
     nr_pols = 2 #Number of polarization channels
     def __init__(self, artsdata):
         """Objects are created based on a Arts coefficient C++ header
@@ -28,15 +28,15 @@ class HamakerPolarimeter(object):
         self.freq_center = artsdata['freq_center']
         self.freq_range = artsdata['freq_range']
         self.channels = artsdata['channels']
-        
+
         self.nr_bands=len(self.coefs)
         self.freqintervs = (self.freq_center-self.freq_range,
             self.freq_center+self.freq_range)
-    
+
     def getfreqs(self):
         """Returns nominals channel center frequencies"""
         return self.channels
-    
+
     def getJonesAlong(self, freqvals, theta_phi):
         """Compute Jones matrix for given frequencies and directions.
         Input is list of frequencies in Hz and a list of theta,phi pairs;
@@ -82,10 +82,13 @@ def plotElemPat(artsdata, frequency = 55.0e6):
     jones=hp.getJonesAlong([frequency], (THETA, PHI) )
     EsTh = numpy.squeeze(jones[...,0,0])
     EsPh = numpy.squeeze(jones[...,0,1])
-    tvecfun.plotvfonsph(THETA, PHI, EsTh, EsPh, freq=frequency, vcoord='Ludwig3')
+    tvecfun.plotvfonsph(THETA, PHI, EsTh, EsPh, freq=frequency,
+                        vcoordlist=['sph'], projection='azimuthal-equidistant', vfname='Hamaker')
     EsTh = numpy.squeeze(jones[...,1,0])
     EsPh = numpy.squeeze(jones[...,1,1])
-    tvecfun.plotvfonsph(THETA, PHI, EsTh, EsPh, freq=frequency, vcoord='Ludwig3')
+    tvecfun.plotvfonsph(THETA, PHI, EsTh, EsPh, freq=frequency,
+    #                    vcoordlist=['Ludwig3'], vfname='Hamaker')
+                        vcoordlist=['sph'], projection='equirectangular', vfname='Hamaker')
 
 
 def showAnomaly():
@@ -96,7 +99,7 @@ def showAnomaly():
     timeAngs = numpy.linspace(-timeAng, timeAng, nrPnts)/2.0
     theta0 = 0.5
     thetas, phis = pntsonsphere.getTrack(theta0, 0*math.pi/4, theta0-0.001, timeAngs)
-    hp = HamakerPolarimeter(HA_LBAfile_default)
+    hp = HamakerPolarimeter(artsdata)
     #jones = hp.getJonesAlong([frequency], (phis+1*5*math.pi/4, math.pi/2-thetas))
     jones = hp.getJonesAlong([frequency], (phis+1*5*math.pi/4, thetas))
     EsTh = numpy.squeeze(jones[...,0,0])
@@ -115,7 +118,7 @@ def showAnomaly():
 def getJones(freq, az, el):
     """Print the Jones matrix of the HA model for a frequency and direction."""
     hp = HamakerPolarimeter(HA_LBAfile_default)
-    jones=hp.getJonesAlong([10.e6], (0.1, 0.2))
+    jones=hp.getJonesAlong([freq], (0.1, 0.2))
     print "Jones:"
     print jones
     print "J.J^H:"
@@ -132,8 +135,12 @@ def _getargs():
 
 
 if __name__ == "__main__":
-    #plotElemPat(30e6)
-    showAnomaly()
+    from dreambeam.telescopes.LOFAR.telwizhelper import read_LOFAR_HAcc
+    artsdata = read_LOFAR_HAcc('../../example_FF_files/DefaultCoeffLBA.cc')
+    freq = 80e6
+    artsdata['channels'] = [freq]
+    plotElemPat(artsdata, freq)
+    #showAnomaly()
     #HBAmod = HamakerPolarimeter(HA_HBAfile_default)
     #jones = HBAmod.getJonesAlong([150e6, 160e6, 170e6], ( [0.1,0.1], [0.3, 0.4]) )
     #print jones
