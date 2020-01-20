@@ -1,22 +1,21 @@
 #!/usr/bin/python
 """Hamaker's analytic antenna pattern model."""
-#TobiaC 2015-11-29 (2015-07-31)
+# TobiaC 2015-11-29 (2015-07-31)
 
 import sys
-#sys.path.append('/home/tobia/projects/BeamFormica/AntPatter/')
 import math
-import cmath
-import scipy.special
 import numpy
 from antpat import dualpolelem
 from antpat.reps.sphgridfun import tvecfun, pntsonsphere
 import matplotlib.pyplot as plt
 HA_LBAfile_default = ''
 
+
 class HamakerPolarimeter(object):
     """This is the Hamaker polarimeter model class."""
 
-    nr_pols = 2 #Number of polarization channels
+    nr_pols = 2  # Number of polarization channels
+
     def __init__(self, artsdata):
         """Objects are created based on a Arts coefficient C++ header
         file. There is current one default set for the HBA and one for
@@ -29,9 +28,9 @@ class HamakerPolarimeter(object):
         self.freq_range = artsdata['freq_range']
         self.channels = artsdata['channels']
 
-        self.nr_bands=len(self.coefs)
+        self.nr_bands = len(self.coefs)
         self.freqintervs = (self.freq_center-self.freq_range,
-            self.freq_center+self.freq_range)
+                            self.freq_center+self.freq_range)
 
     def getfreqs(self):
         """Returns nominals channel center frequencies"""
@@ -50,45 +49,47 @@ class HamakerPolarimeter(object):
         freqn = (freqvals-self.freq_center)/self.freq_range
         if len(freqvals) > 1:
             frqXdrn_shp = freqvals.shape+theta.shape
-        else :
+        else:
             frqXdrn_shp = theta.shape
         response = numpy.zeros(frqXdrn_shp+(2, 2), dtype=complex)
         for ki in range(k_ord):
             P = numpy.zeros((nr_pol,)+frqXdrn_shp, dtype=complex)
             for THi in range(TH_ord):
                 for FRi in range(FR_ord):
-                    fac = numpy.multiply.outer(freqn**FRi, theta**THi).squeeze()
-                    P[0,...] += self.coefs[ki,THi,FRi,0]*fac
-                    P[1,...] += self.coefs[ki,THi,FRi,1]*fac
+                    fac = numpy.multiply.outer(freqn**FRi,
+                                               theta**THi).squeeze()
+                    P[0, ...] += self.coefs[ki, THi, FRi, 0]*fac
+                    P[1, ...] += self.coefs[ki, THi, FRi, 1]*fac
             ang = (-1)**ki*(2*ki+1)*phi
-            response[...,0,0] += +numpy.cos(ang)*P[0,...]
-            response[...,0,1] += -numpy.sin(ang)*P[1,...]
-            response[...,1,0] += +numpy.sin(ang)*P[0,...]
-            response[...,1,1] += +numpy.cos(ang)*P[1,...]
-            #numpy.array([[math.cos(ang)*P[0],-math.sin(ang)*P[1]],
-            #             [math.sin(ang)*P[0], math.cos(ang)*P[1]]])
-        #Mask beam below horizon
+            response[..., 0, 0] += +numpy.cos(ang)*P[0, ...]
+            response[..., 0, 1] += -numpy.sin(ang)*P[1, ...]
+            response[..., 1, 0] += +numpy.sin(ang)*P[0, ...]
+            response[..., 1, 1] += +numpy.cos(ang)*P[1, ...]
+            # numpy.array([[math.cos(ang)*P[0],-math.sin(ang)*P[1]],
+            #              [math.sin(ang)*P[0], math.cos(ang)*P[1]]])
+        # Mask beam below horizon
         if mask_horizon:
-            mh = numpy.ones(frqXdrn_shp+(1,1))
-            mh[...,numpy.where(theta>numpy.pi/2),0,0]=0.
-            response=mh*response
+            mh = numpy.ones(frqXdrn_shp+(1, 1))
+            mh[..., numpy.where(theta > numpy.pi/2), 0, 0] = 0.0
+            response = mh*response
         return response
 
 
-def plotElemPat(artsdata, frequency = 55.0e6):
+def plotElemPat(artsdata, frequency=55.0e6):
     """Plots the HA antenna pattern over the entire Hemisphere."""
-    THETA, PHI = pntsonsphere.ZenHemisphGrid() #theta=0.2rad for zenith anomaly
+    THETA, PHI = pntsonsphere.ZenHemisphGrid()  # theta=0.2rad for zenith anomaly
     hp = HamakerPolarimeter(artsdata)
-    jones=hp.getJonesAlong([frequency], (THETA, PHI) )
-    EsTh = numpy.squeeze(jones[...,0,0])
-    EsPh = numpy.squeeze(jones[...,0,1])
+    jones = hp.getJonesAlong([frequency], (THETA, PHI))
+    EsTh = numpy.squeeze(jones[..., 0, 0])
+    EsPh = numpy.squeeze(jones[..., 0, 1])
     tvecfun.plotvfonsph(THETA, PHI, EsTh, EsPh, freq=frequency,
-                        vcoordlist=['sph'], projection='azimuthal-equidistant', vfname='Hamaker')
-    EsTh = numpy.squeeze(jones[...,1,0])
-    EsPh = numpy.squeeze(jones[...,1,1])
+                        vcoordlist=['sph'], projection='azimuthal-equidistant',
+                        vfname='Hamaker')
+    EsTh = numpy.squeeze(jones[..., 1, 0])
+    EsPh = numpy.squeeze(jones[..., 1, 1])
     tvecfun.plotvfonsph(THETA, PHI, EsTh, EsPh, freq=frequency,
-    #                    vcoordlist=['Ludwig3'], vfname='Hamaker')
-                        vcoordlist=['sph'], projection='equirectangular', vfname='Hamaker')
+                        vcoordlist=['sph'], projection='equirectangular',
+                        vfname='Hamaker')  # vcoordlist=['Ludwig3']
 
 
 def showAnomaly():
@@ -98,17 +99,17 @@ def showAnomaly():
     timeAng = 0.5
     timeAngs = numpy.linspace(-timeAng, timeAng, nrPnts)/2.0
     theta0 = 0.5
-    thetas, phis = pntsonsphere.getTrack(theta0, 0*math.pi/4, theta0-0.001, timeAngs)
+    thetas, phis = pntsonsphere.getTrack(theta0, 0*math.pi/4, theta0-0.001,
+                                         timeAngs)
     hp = HamakerPolarimeter(artsdata)
-    #jones = hp.getJonesAlong([frequency], (phis+1*5*math.pi/4, math.pi/2-thetas))
     jones = hp.getJonesAlong([frequency], (phis+1*5*math.pi/4, thetas))
-    EsTh = numpy.squeeze(jones[...,0,0])
-    EsPh = numpy.squeeze(jones[...,0,1])
-    plt.subplot(2,1,1)
+    EsTh = numpy.squeeze(jones[..., 0, 0])
+    EsPh = numpy.squeeze(jones[..., 0, 1])
+    plt.subplot(2, 1, 1)
     plt.plot(phis/math.pi*180, 90-thetas/math.pi*180, '*')
     plt.xlabel('Azimuth [deg]')
     plt.ylabel('Elevation [deg]')
-    plt.subplot(2,1,2)
+    plt.subplot(2, 1, 2)
     plt.plot(timeAngs*60, numpy.abs(EsTh))
     plt.xlabel('Transit time [min]')
     plt.ylabel('Gain [rel.]')
@@ -118,13 +119,13 @@ def showAnomaly():
 def getJones(freq, az, el):
     """Print the Jones matrix of the HA model for a frequency and direction."""
     hp = HamakerPolarimeter(HA_LBAfile_default)
-    jones=hp.getJonesAlong([freq], (0.1, 0.2))
-    print "Jones:"
-    print jones
-    print "J.J^H:"
-    print numpy.dot(jones, jones.conj().transpose()).real
+    jones = hp.getJonesAlong([freq], (0.1, 0.2))
+    print("Jones:")
+    print(jones)
+    print("J.J^H:")
+    print(numpy.dot(jones, jones.conj().transpose()).real)
     IXRJ = dualpolelem.getIXRJ(jones)
-    print "IXRJ:", 10*numpy.log10(IXRJ),"[dB]"
+    print("IXRJ:", 10*numpy.log10(IXRJ), "[dB]")
 
 
 def _getargs():
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     freq = 80e6
     artsdata['channels'] = [freq]
     plotElemPat(artsdata, freq)
-    #showAnomaly()
-    #HBAmod = HamakerPolarimeter(HA_HBAfile_default)
-    #jones = HBAmod.getJonesAlong([150e6, 160e6, 170e6], ( [0.1,0.1], [0.3, 0.4]) )
-    #print jones
+    # showAnomaly()
+    # HBAmod = HamakerPolarimeter(HA_HBAfile_default)
+    # jones = HBAmod.getJonesAlong([150e6, 160e6, 170e6], ( [0.1,0.1], [0.3, 0.4]) )
+    # print(jones)
