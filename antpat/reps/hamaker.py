@@ -4,11 +4,14 @@
 
 import sys
 import math
+import re
+import pickle
 import numpy
 from antpat import dualpolelem
 from antpat.reps.sphgridfun import tvecfun, pntsonsphere
 import matplotlib.pyplot as plt
 HA_LBAfile_default = ''
+PICKLE_PROTO = pickle.HIGHEST_PROTOCOL
 
 
 class HamakerPolarimeter(object):
@@ -73,6 +76,66 @@ class HamakerPolarimeter(object):
             mh[..., numpy.where(theta > numpy.pi/2), 0, 0] = 0.0
             response = mh*response
         return response
+
+
+def read_LOFAR_HAcc(coefsccfilename):
+    """Read Hamaker-Arts coefficients from c++ header files used in the
+    "lofar_element_response" code developed at ASTRON for LOFAR.
+
+    These header files contains LOFAR specific constructs such as reference
+    to "lba" and "hba", so it is not suitable for other projects.
+    """
+    NR_POLS = 2
+    re_fcenter = r'[lh]ba_freq_center\s*=\s*(?P<centerstr>.*);'
+    re_frange = r'[lh]ba_freq_range\s*=\s*(?P<rangestr>.*);'
+    re_shape = \
+        r'default_[lh]ba_coeff_shape\[3\]\s*=\s*\{(?P<lstshp>[^\}]*)\}'
+    re_hl_ba_coeffs_lst = \
+        r'(?P<version>\w+)(?P<band>[hl]ba)_coeff\s*\[\s*(?P<nrelem>\d+)\s*\]\s*=\s*\{(?P<cmplstr>[^\}]*)\}'
+    re_cc_cmpl_coef = r'std::complex<double>\((.*?)\)'
+    with open(coefsccfilename, 'r') as coefsccfile:
+        coefsfile_content = coefsccfile.read()
+    searchres = re.search(re_fcenter, coefsfile_content)
+    freq_center = float(searchres.group('centerstr'))
+    searchres = re.search(re_frange, coefsfile_content)
+    freq_range = float(searchres.group('rangestr'))
+    searchres = re.search(re_shape, coefsfile_content)
+    lstshp = [int(lstshpel) for lstshpel in
+              searchres.group('lstshp').split(',')]
+    lstshp.append(NR_POLS)
+    searchres = re.search(re_hl_ba_coeffs_lst, coefsfile_content, re.M)
+    HAcoefversion = searchres.group('version')
+    HAcoefband = searchres.group('band')
+    HAcoefnrelem = searchres.group('nrelem')
+    lstofCmpl = re.findall(re_cc_cmpl_coef, searchres.group('cmplstr'))
+    cmplx_lst = []
+    for reimstr in lstofCmpl:
+        reimstrs = reimstr.split(',')
+        cmplx_lst.append(complex(float(reimstrs[0]), float(reimstrs[1])))
+    coefs = numpy.reshape(numpy.array(cmplx_lst), lstshp)
+    # The coefficients are order now as follows:
+    #   coefs[k,theta,freq,spherical-component].shape == (2,5,5,2)
+    artsdata = {'coefs': coefs, 'HAcoefversion': HAcoefversion,
+                'HAcoefband': HAcoefband, 'HAcoefnrelem': HAcoefnrelem,
+                'freq_center': freq_center, 'freq_range': freq_range}
+    return artsdata
+
+
+def convLOFARcc2HA(inpfile, outfile, channels):
+    """Convert a .cc file of the Hamaker-Arts model to a file with a pickled
+    dict of a Hamaker-Arts instance."""
+    artsdata = read_LOFAR_HAcc(inpfile)
+    artsdata['channels'] = channels
+    pickle.dump(artsdata, open(outfile, 'wb'), PICKLE_PROTO)
+
+
+def convHA2DPE(inp_HA_file, out_DP_file):
+    """Convert a file with a pickled dict of a Hamaker-Arts instance to a
+    file with a pickled DualPolElem object."""
+    artsdata = pickle.load(open(inp_HA_file, 'rb'))
+    HLBA = HamakerPolarimeter(artsdata)
+    stnDPolel = dualpolelem.DualPolElem(HLBA)
+    pickle.dump(stnDPolel, open(out_DP_file, 'wb'), PICKLE_PROTO)
 
 
 def plotElemPat(artsdata, frequency=55.0e6):
