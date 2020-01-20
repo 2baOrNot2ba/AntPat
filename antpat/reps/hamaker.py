@@ -199,7 +199,6 @@ def _getargs():
 
 
 if __name__ == "__main__":
-    from dreambeam.telescopes.LOFAR.telwizhelper import read_LOFAR_HAcc
     artsdata = read_LOFAR_HAcc('../../example_FF_files/DefaultCoeffLBA.cc')
     freq = 80e6
     artsdata['channels'] = [freq]
