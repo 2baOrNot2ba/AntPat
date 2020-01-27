@@ -31,27 +31,27 @@ class DualPolElem(object):
             print "Not more than two arguments"
             exit(1)
         self.basis = None
-    
+
     def getfreqs(self):
         """Get Frequencies"""
         if self.tmfd is None:
             return self.radFFp.getfreqs()
         else:
             return self.tmfd.getfreqs()
-    
+
     def getJonesPat(self,freqval):
         """Return the dual-pol antenna elements Jones pattern for a
-        given frequency.""" 
+        given frequency."""
         THETA, PHI, p_E_th, p_E_ph=self.radFFp.getFFongrid(freqval)
         THETA, PHI, q_E_th, q_E_ph=self.radFFq.getFFongrid(freqval)
-        
+
         Jones=numpy.zeros(p_E_th.shape+(2,2), dtype=complex)
         Jones[...,0,0]=p_E_th
         Jones[...,0,1]=p_E_ph
         Jones[...,1,0]=q_E_th
         Jones[...,1,1]=q_E_ph
         return THETA, PHI, Jones
-    
+
     def getJonesAlong(self, freqval, theta_phi_view):
         theta_view, phi_view = theta_phi_view
         (theta_build, phi_build) = self.view2build_coords(theta_view, phi_view)
@@ -84,7 +84,13 @@ class DualPolElem(object):
                 Jones[...,1,0] = q_E_th
                 Jones[...,1,1] = q_E_ph
         return Jones
-    
+
+    def getFFalong(self, freqval,  theta_phi_view, polchan=0):
+        jones = self.getJonesAlong(freqval,  theta_phi_view)
+        E_th = jones[..., polchan, 0].squeeze()
+        E_ph = jones[..., polchan, 1].squeeze()
+        return E_th, E_ph
+
     def view2build_coords(self, theta_view, phi_view):
         """Get the corresponding directions in the build frame."""
         if self.basis is not None:
@@ -94,30 +100,30 @@ class DualPolElem(object):
         else:
             (theta_build, phi_build) = (theta_view, phi_view)
         return (theta_build, phi_build)
-    
+
     def rotateframe(self, rotMat):
         """Rotate the frame of antenna. This is a 'passive' rotation: it
         does not rotate the field, but when evaluated in some
         direction the direction given will be rotated to the frame so
         as to appear as if it were rotated.
-        
+
         The basis or rotation matrix is to be considered as acting on
         the antenna, i.e.
-        
+
               view_crds=rotMat*build_crds
-        
+
         assuming the the antenna has not been rotated already. If it has then
         the inputted rotation is added to the current rotation, so that
-        
+
               view_crds=rotMat*rotMat_0*build_crds
-        
+
         where rotMat_0 is previous rotation state (could be aggregate of many).
         """
         if self.basis is None:
             self.basis = rotMat
         else:
             self.basis = numpy.matmul(rotMat, self.basis)
-    
+
     def load_ffes(self, filename_p, filename_q):
         """Load a pair of FFE and make them correspond to this DualPolElem
         object. First file will be pol-channel p and second q."""
@@ -128,7 +134,7 @@ class DualPolElem(object):
         tvf_q.load_ffe(filename_q)
         self.radFFp = RadFarField(tvf_p)
         self.radFFq = RadFarField(tvf_q)
-    
+
     def load_ffe(self, filename, request_p=None, request_q=None):
         #FIX: This not the most efficient way to do this as it does two passes over feko file.
         ffefile = FEKOffe(filename)
@@ -149,8 +155,8 @@ class DualPolElem(object):
         tvf_q.load_ffe(filename, request_q)
         self.radFFp = RadFarField(tvf_p)
         self.radFFq = RadFarField(tvf_q)
-    
-    def plotJonesPat3D(self, freq=0.0, vcoord='sph', 
+
+    def plotJonesPat3D(self, freq=0.0, vcoord='sph',
                        projection='equirectangular', cmplx_rep='AbsAng'):
         """Plot the Jones pattern as two single pol antenna patterns."""
         theta_rad, phi_rad, JonesPat=self.getJonesPat(freq)
