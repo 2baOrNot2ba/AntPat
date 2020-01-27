@@ -98,6 +98,12 @@ class TVecFields(object):
         ffefile.Request[request] = ffereq
         ffefile.write(filename)
 
+    def scale(self, scalefac):
+        """Scale Fphis and Fthetas by a multiplicative scale factor scalefac.
+        """
+        self.Fthetas = scalefac * self.Fthetas
+        self.Fphis = self.Fphis
+
     def getthetas(self):
         return self.thetaMsh
 
@@ -134,6 +140,7 @@ class TVecFields(object):
         """Get vector field for the given direction."""
         thetadomshp = theta_ub.shape
         phidomshp = phi_ub.shape
+        outshp = thetadomshp
         theta_ub = theta_ub.flatten()
         phi_ub = phi_ub.flatten()
         (theta, phi) = putOnPrincBranch(theta_ub, phi_ub)
@@ -147,6 +154,7 @@ class TVecFields(object):
             rthetaphi[:,:,1] = thetaM
             rthetaphi[:,:,2] = phiM
             rthetaphiAxis = (self.R,)+thetaphiAxis
+            outshp = (len(Rval),)+outshp
         else:
             rthetaphi = numpy.array([theta,phi]).T
             rthetaphiAxis = thetaphiAxis
@@ -154,8 +162,8 @@ class TVecFields(object):
         F_th = F_th_intrpf(rthetaphi)
         F_ph_intrpf = RegularGridInterpolator(rthetaphiAxis, F_ph_prdc)
         F_ph = F_ph_intrpf(rthetaphi)
-        F_th = F_th.reshape(thetadomshp)
-        F_ph = F_ph.reshape(thetadomshp)
+        F_th = F_th.reshape(outshp)
+        F_ph = F_ph.reshape(outshp)
         return F_th, F_ph
 
     def getAngRes(self):
