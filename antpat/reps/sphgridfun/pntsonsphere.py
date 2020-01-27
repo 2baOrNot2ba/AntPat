@@ -15,9 +15,9 @@ def sphericalGrid(nrThetas=128, nrPhis=256):
     return thetamsh, phimsh
 
 
-def ZenHemisphGrid(nrThetas=100, nrPhis=200):
-    """Provides a polar angles grid on a 2-sphere"""
-    theta = np.linspace(0., math.pi/2, nrThetas, endpoint=True)
+def ZenHemisphGrid(nrThetas=100, nrPhis=200, incl_equator=True):
+    """Provides a polar angles grid on a 2-hemisphere"""
+    theta = np.linspace(0., math.pi/2, nrThetas, endpoint=incl_equator)
     phi = np.linspace(0., 2*math.pi, nrPhis, endpoint=False)
     phimsh, thetamsh=np.meshgrid(phi, theta)
     return thetamsh, phimsh
@@ -84,7 +84,7 @@ def crt2sphHorizontal(xyz):
     x = xyz[0,...]
     y = xyz[1,...]
     z = xyz[2,...]
-    az = np.arctan2(x, y) #The azimuth here is from North through East 
+    az = np.arctan2(x, y) #The azimuth here is from North through East
                           #but x is East and y is North, hence flip.
     el = np.arcsin(z)
     return (az, el)
@@ -109,4 +109,3 @@ def rot3Dmat(rotzang1, rotxang, rotzang0):
     (All angles in radians)
     """
     return np.matmul(rotzmat(rotzang1), np.matmul(rotxmat(rotxang), rotzmat(rotzang0)) )
-
