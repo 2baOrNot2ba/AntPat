@@ -91,13 +91,13 @@ def _readNECout_FFnextFreq(fp):
             freqlinelst = freqline.split()
             freqStr, freqUnit = freqlinelst[-2:]
             freq = float(freqStr)
-            if freqUnit == 'Hz':
+            if freqUnit == 'Hz' or freqUnit == 'HZ':
                 freq = freq*1
-            elif freqUnit == 'kHz':
+            elif freqUnit == 'kHz' or freqUnit == 'KHZ':
                 freq = freq*1e3
-            elif freqUnit == 'MHz':
+            elif freqUnit == 'MHz' or freqUnit == 'MHZ':
                 freq = freq*1e6
-            elif freqUnit == 'THz':
+            elif freqUnit == 'GHz' or freqUnit == 'GHZ':
                 freq = freq*1e9
             break
 
