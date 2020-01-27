@@ -102,7 +102,7 @@ class TVecFields(object):
         """Scale Fphis and Fthetas by a multiplicative scale factor scalefac.
         """
         self.Fthetas = scalefac * self.Fthetas
-        self.Fphis = self.Fphis
+        self.Fphis = scalefac * self.Fphis
 
     def getthetas(self):
         return self.thetaMsh
