@@ -5,6 +5,7 @@ import datetime
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
 from antpat.io.feko_ffe import FEKOffe, FEKOffeRequest
+from .pntsonsphere import sph2crtISO
 
 
 class TVecFields(object):
