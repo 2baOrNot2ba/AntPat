@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 
 from antpat.reps.sphgridfun.pntsonsphere import ZenHemisphGrid
 from antpat.dualpolelem import DualPolElem, jones2gIXR, IXRJ2IXRM
-from antpat.reps import hamaker
-from antpat.reps.hamaker import _read_LOFAR_HAcc
+from antpat.reps.hamaker import convLOFARcc2DPE
 import antpat.io.filetypes as antfiles
 
 
@@ -72,9 +71,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.filename.endswith(antfiles.HamArtsuffix):
-        artsdata = _read_LOFAR_HAcc(args.filename)
-        artsdata['channels'] = [args.freq]
-        hp = hamaker.HamakerPolarimeter(artsdata)
+        hp = convLOFARcc2DPE(args.filename, [args.freq])
     elif args.filename.endswith(antfiles.FEKOsuffix):
         hp = DualPolElem()
         hp.load_ffes(args.filename, args.filename_q)
