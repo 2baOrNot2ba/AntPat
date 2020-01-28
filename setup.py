@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+from antpat import __version__
 
 setup(name='AntPat',
-      version='0.2',
+      version=__version__,
       description='Antenna pattern tools.',
       author='Tobia D. Carozzi',
       author_email='tobia.carozzi@chalmers.se',
