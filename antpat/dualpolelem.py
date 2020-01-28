@@ -1,7 +1,6 @@
 """Model generic, a dual polarized antenna element."""
-#TobiaC 2015-12-02
+# TobiaC 2015-12-02
 
-import math
 import numpy
 import matplotlib.pyplot as plt
 import matplotlib.dates
@@ -28,8 +27,7 @@ class DualPolElem(object):
             self.radFFp = args[0]
             self.radFFq = args[1]
         else:
-            print "Not more than two arguments"
-            exit(1)
+            raise RuntimeError("Not more than two arguments")
         self.basis = None
 
     def getfreqs(self):
@@ -141,14 +139,15 @@ class DualPolElem(object):
         if request_p is None and request_q is None :
             if len(ffefile.Requests) == 2:
                 requests = list(ffefile.Requests)
-                requests.sort() #FIX Not sure how to order requests
+                requests.sort()  # # FIXME: Not sure how to order requests
                 request_p = requests[0]
                 request_q = requests[1]
             else:
-                print "File contains multiple FFs (specify one): "+','.join(ffefile.Requests)
-                exit(1)
-        print "Request_p= "+request_p
-        print "Request_q= "+request_q
+                raise RuntimeError(
+                    "File contains multiple FFs (specify one): "
+                    + ','.join(ffefile.Requests))
+        print("Request_p= "+request_p)
+        print("Request_q= "+request_q)
         tvf_p = tvecfun.TVecFields()
         tvf_q = tvecfun.TVecFields()
         tvf_p.load_ffe(filename, request_p)

@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 """A simple viewer for Jones patterns for dual-polarized representations.
 """
-import os
 import argparse
 import numpy
 import matplotlib.pyplot as plt
-from urlparse import urlparse
 
-from antpat.reps.sphgridfun.tvecfun import TVecFields
 from antpat.reps.sphgridfun.pntsonsphere import ZenHemisphGrid
-from antpat.radfarfield import RadFarField
 from antpat.dualpolelem import DualPolElem, jones2gIXR, IXRJ2IXRM
 from antpat.reps import hamaker
-from dreambeam.telescopes.LOFAR.telwizhelper import read_LOFAR_HAcc
+from antpat.reps.hamaker import _read_LOFAR_HAcc
 import antpat.io.filetypes as antfiles
 
 
@@ -40,8 +36,8 @@ def plotJonesCanonical(theta, phi, jones, dpelemname):
         g = g/g_max
     if dbscale:
         g = 20*numpy.log10(g)
-        nrlvls = 5
-        g_lvls = numpy.max(g) - 3.0*numpy.arange(nrlvls)
+        # nrlvls = 5
+        # g_lvls = numpy.max(g) - 3.0*numpy.arange(nrlvls)
     plt.pcolormesh(phi, numpy.rad2deg(theta), g)
     # plt.contour( phi, numpy.rad2deg(theta), g_dress, levels = g_lvls)
     plt.colorbar()
@@ -54,27 +50,29 @@ def plotJonesCanonical(theta, phi, jones, dpelemname):
 
 
 def plotFFpat():
-    E_th = jones[:, :, 0, 0].squeeze()
-    E_ph = jones[:, :, 0, 1].squeeze()
     from antpat.reps.sphgridfun import tvecfun
-    tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, args.freq,
-                        vcoordlist=['Ludwig3'], projection='orthographic')
+    for polchan in [0, 1]:
+        E_th = jones[:, :, polchan, 0].squeeze()
+        E_ph = jones[:, :, polchan, 1].squeeze()
+        tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, args.freq,
+                            vcoordlist=['Ludwig3'], projection='orthographic')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("freq", type=float,
                         help="Frequency in Hertz")
-    parser.add_argument("filename",
-                 help = """
-                 Filename of dual-polarization FF, Hamaker-Arts format,
-                 or a single-polarization FF (p-channel)""")
+    parser.add_argument("filename", help="""
+        Filename of dual-polarization FF, Hamaker-Arts format,
+        or a single-polarization FF (p-channel)""")
     parser.add_argument("filename_q", nargs='?',
-                 help='Filename of second (q-channel) single-polarization FF.')
+                        help="""
+                        Filename of second (q-channel) single-polarization FF.
+                        """)
     args = parser.parse_args()
 
     if args.filename.endswith(antfiles.HamArtsuffix):
-        artsdata = read_LOFAR_HAcc(args.filename)
+        artsdata = _read_LOFAR_HAcc(args.filename)
         artsdata['channels'] = [args.freq]
         hp = hamaker.HamakerPolarimeter(artsdata)
     elif args.filename.endswith(antfiles.FEKOsuffix):
@@ -85,6 +83,5 @@ if __name__ == "__main__":
     THETA, PHI = ZenHemisphGrid()
     jones = hp.getJonesAlong([args.freq], (THETA, PHI))
     plotFFpat()
-    exit()
-    plotJonesCanonical(THETA, PHI, jones, os.path.basename(args.filename)
-                       + ' (' + str(args.freq/1e6) + ' MHz)')
+    # plotJonesCanonical(THETA, PHI, jones, os.path.basename(args.filename)
+    #                    + ' (' + str(args.freq/1e6) + ' MHz)')

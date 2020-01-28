@@ -4,22 +4,23 @@ import numpy.ma
 import datetime
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
-from pntsonsphere import sph2crtISO, crt2sphHorizontal
 from antpat.io.feko_ffe import FEKOffe, FEKOffeRequest
+
 
 class TVecFields(object):
     """Provides a tangetial vector function on a spherical grid. The
     coordinates (theta,phi) should be in radians. The vector components
     can be either in polar spherical basis or in Ludwig3."""
+
     def __init__(self, *args):
         if len(args) > 0:
             self._full_init(*args)
 
     def _full_init(self, thetaMsh, phiMsh, F1, F2, R=None, basisType='polar'):
         self.R = R
-        self.thetaMsh = thetaMsh # Assume thetaMsh is repeated columns
-                                 # (unique axis=0)
-        self.phiMsh = phiMsh # Assume thetaMsh is repeated rows (unique axis=1)
+        self.thetaMsh = thetaMsh    # Assume thetaMsh is repeated columns
+                                    # (unique axis=0)
+        self.phiMsh = phiMsh  # Assume thetaMsh is repeated rows (uniq. axis=1)
         if basisType == 'polar':
             self.Fthetas = F1
             self.Fphis = F2
@@ -36,8 +37,8 @@ class TVecFields(object):
             if len(ffefile.Requests) == 1:
                 request = ffefile.Requests.pop()
             else:
-                print "File contains multiple FFs (specify one): "+','.join(ffefile.Requests)
-                exit(1)
+                raise RuntimeError("File contains multiple FFs (specify one): "
+                    + ','.join(ffefile.Requests))
         ffereq = ffefile.Request[request]
         self.R        = numpy.array(ffereq.freqs)
         self.thetaMsh = numpy.deg2rad(ffereq.theta)
