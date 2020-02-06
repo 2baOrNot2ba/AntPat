@@ -288,28 +288,38 @@ def _write_LOFAR_HAcc(artsdata):
                     for pi in range(pord):
                         cf = coefs[ki, ti, fi, pi]
                         fp.write(" std::complex<double>(")
-                        fp.write("{}, {}),".format(cf.real, cf.imag))
+                        fp.write("{}, {})".format(cf.real, cf.imag))
+                        if ki + 1 < kord:
+                            fp.write(",")
                     fp.write("\n")
         fp.write("};\n")
+        # Add frequency channels (not part of original format)
+        fp.write("const double {}_channels[{}] = {{\n    ".format(
+                 varprefix, len(artsdata['channels'])))
+        fp.write("{}".format(",\n    ".join(
+            [str(frq) for frq in artsdata['channels']])))
+        fp.write("\n};\n")
     return filename
 
 
 def convDPE2LOFARcc(antpat, freq_center, freq_range, HAcoefband=None,
-                    HAcoefversion="def0", kord=2, tord=5, ford=5):
+                    HAcoefversion="def0", kord=2, tord=5, ford=5,
+                    channels=None):
     """Convert a DualPolElem (or TVecFields or RadFarField) to a Hamaker-Arts
     LOFAR .cc file."""
-    if isinstance(antpat, tvecfun.TVecFields):
-        freqs = antpat.getRs()
-    elif isinstance(antpat, radfarfield.RadFarField) \
-            or isinstance(antpat, dualpolelem.DualPolElem):
-        freqs = antpat.getfreqs()
+    if channels is None:
+        if isinstance(antpat, tvecfun.TVecFields):
+            channels = antpat.getRs()
+        elif isinstance(antpat, radfarfield.RadFarField) \
+                or isinstance(antpat, dualpolelem.DualPolElem):
+            channels = antpat.getfreqs()
     coefs = hamaker_coefs(antpat, freq_center, freq_range, kord=kord,
                           tord=tord, ford=ford)
     HAcoefnrelem = coefs.size
     artsdata = {'coefs': coefs, 'HAcoefversion': HAcoefversion,
                 'HAcoefband': HAcoefband, 'HAcoefnrelem': HAcoefnrelem,
                 'freq_center': freq_center, 'freq_range': freq_range,
-                'channels': freqs}
+                'channels': channels}
     filename = _write_LOFAR_HAcc(artsdata)
     return artsdata, filename
 
@@ -324,10 +334,11 @@ def _read_LOFAR_HAcc(coefsccfilename):
     NR_POLS = 2
     re_fcenter = r'[lh]ba_freq_center\s*=\s*(?P<centerstr>.*);'
     re_frange = r'[lh]ba_freq_range\s*=\s*(?P<rangestr>.*);'
-    re_shape = r'[lh]ba_coeff_shape\[3\]\s*=\s*\{(?P<lstshp>[^\}]*)\}'
+    re_shape = r'[lh]ba_coeff_shape\[3\]\s*=\s*\{(?P<lstshp>[^\}]*)\};'
     re_hl_ba_coeffs_lst = \
-        r'(?P<version>\w+)(?P<band>[hl]ba)_coeff\s*\[\s*(?P<nrelem>\d+)\s*\]\s*=\s*\{(?P<cmplstr>[^\}]*)\}'
+        r'(?P<version>\w+)_(?P<band>[hl]ba)_coeff\s*\[\s*(?P<nrelem>\d+)\s*\]\s*=\s*\{(?P<cmplstr>[^\}]*)\}'
     re_cc_cmpl_coef = r'std::complex<double>\((.*?)\)'
+    re_channels = r'[lh]ba_channels\[(?P<nrfrqs>\d+)\]\s*=\s*\{(?P<chnls>[^\}]*)\};'
     with open(coefsccfilename, 'r') as coefsccfile:
         coefsfile_content = coefsccfile.read()
     searchres = re.search(re_fcenter, coefsfile_content)
@@ -348,15 +359,22 @@ def _read_LOFAR_HAcc(coefsccfilename):
         reimstrs = reimstr.split(',')
         cmplx_lst.append(complex(float(reimstrs[0]), float(reimstrs[1])))
     coefs = numpy.reshape(numpy.array(cmplx_lst), lstshp)
+    searchres = re.search(re_channels, coefsfile_content)
+    if searchres:
+        channels = [float(frq) for frq in
+                    searchres.group('chnls').split(',')]
+    else:
+        channels = None
     # The coefficients are order now as follows:
     #   coefs[k,theta,freq,spherical-component].shape == (2,5,5,2)
     artsdata = {'coefs': coefs, 'HAcoefversion': HAcoefversion,
                 'HAcoefband': HAcoefband, 'HAcoefnrelem': HAcoefnrelem,
-                'freq_center': freq_center, 'freq_range': freq_range}
+                'freq_center': freq_center, 'freq_range': freq_range,
+                'channels': channels}
     return artsdata
 
 
-def convLOFARcc2DPE(inpfile, channels, dpe_outfile=None):
+def convLOFARcc2DPE(inpfile, dpe_outfile=None):
     """Convert a LOFAR .cc file of a Hamaker-Arts model named inpfile to a
     a DualPolElem object.
     The channels argument specifies the nominal subband frequencies of the
@@ -364,7 +382,7 @@ def convLOFARcc2DPE(inpfile, channels, dpe_outfile=None):
     If dpe_outfile is given, a pickled instance is created with this name.
     """
     artsdata = _read_LOFAR_HAcc(inpfile)
-    artsdata['channels'] = channels
+    #artsdata['channels'] = channels
     HLBA = HamakerPolarimeter(artsdata)
     stnDPolel = dualpolelem.DualPolElem(HLBA)
     if dpe_outfile is not None:
@@ -409,9 +427,16 @@ def _getargs():
 
 
 if __name__ == "__main__":
-    artsdata = _read_LOFAR_HAcc('../../example_FF_files/DefaultCoeffLBA.cc')
+    #artsdata = _read_LOFAR_HAcc('../../example_FF_files/DefaultCoeffHBA.cc')
+    artsdata = _read_LOFAR_HAcc('../../../dreamBeam/dreambeam/telescopes/LOFAR/share/defaultCoeffHBA.cc')
+    print artsdata
+    exit()
     freq = 55e6
-    artsdata['channels'] = [freq]
+    SAMPFREQ = 100e6
+    NR_CHANNELS = 512
+    artsdata["channels"] = numpy.linspace(SAMPFREQ, 3*SAMPFREQ, 2*NR_CHANNELS, endpoint=False)
+    _write_LOFAR_HAcc(artsdata)
+    exit()
     LBAmod = HamakerPolarimeter(artsdata)
     freqarg = [freq]
     phiarg = [[0.1-5*math.pi/4]]
