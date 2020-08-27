@@ -429,7 +429,7 @@ def _getargs():
 if __name__ == "__main__":
     #artsdata = _read_LOFAR_HAcc('../../example_FF_files/DefaultCoeffHBA.cc')
     artsdata = _read_LOFAR_HAcc('../../../dreamBeam/dreambeam/telescopes/LOFAR/share/defaultCoeffHBA.cc')
-    print artsdata
+    print(artsdata)
     exit()
     freq = 55e6
     SAMPFREQ = 100e6
