@@ -32,7 +32,7 @@ class RadFarField(object):
 
     def getfreqs(self):
         """Get Frequencies"""
-        if self.rep is "VSH":
+        if self.rep == "VSH":
            return self.vshcoefs.frequencies
         else:
            return self.tvgrids.getRs()
@@ -40,11 +40,11 @@ class RadFarField(object):
     def getFFongrid(self,freqval):
         """Get the fields over the entire sphere for a given frequency.
         For vsh fields..."""
-        if self.rep is "VSH":
+        if self.rep == "VSH":
           THETA, PHI = pntsonsphere.sphericalGrid(100, 200)
           vshcoef = self.vshcoefs.getCoefAt(freqval)
           E_th, E_ph = Ksum(vshcoef,THETA,PHI)
-        elif self.rep is "Grid":
+        elif self.rep == "Grid":
           tvgrid = self.tvgrids.getFgridAt(freqval)
           THETA = self.tvgrids.getthetas()
           PHI = self.tvgrids.getphis()
@@ -60,10 +60,10 @@ class RadFarField(object):
         
     def getFFalong_build(self, freqval, theta_phis):
         thetas, phis = theta_phis
-        if self.rep is "VSH":
+        if self.rep == "VSH":
             vshcoef=self.vshcoefs.getCoefAt(freqval)
             E_th, E_ph = Ksum(vshcoef, thetas, phis)
-        elif self.rep is "Grid":
+        elif self.rep == "Grid":
             E_th, E_ph=self.tvgrids.getFalong(thetas, phis, freqval)
         if self.basis is not None:
             E_th, E_ph=tvecfun.transfVecField2RotBasis(self.basis,
@@ -100,9 +100,9 @@ class RadFarField(object):
         plane."""
         #Make deep copy instead of reference to list of TVecFields.
         radFFcopy = copy.deepcopy(self)
-        if self.rep is "Grid":
+        if self.rep == "Grid":
             radFFcopy.tvgrids.rotate90z()
-        elif self.rep is "VSH":
+        elif self.rep == "VSH":
             print("VSH rotate not implimented yet.")
             exit(1)
         return radFFcopy
