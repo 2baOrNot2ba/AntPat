@@ -14,16 +14,17 @@ class DualPolElem(object):
     from two generic representations: two radiation far-fields (two
     single pol antennas) or a tangential (Jones) matrix.
     """
+
     def __init__(self, *args):
         if len(args) == 0:
-            self.tmfd   = None
+            self.tmfd = None
         elif len(args) == 1:
             #"tmfd" stands for tangential matrix field on directions
-            self.tmfd   = args[0]
+            self.tmfd = args[0]
             self.radFFp = None
             self.radFFq = None
         elif len(args) == 2:
-            self.tmfd   = None
+            self.tmfd = None
             self.radFFp = args[0]
             self.radFFq = args[1]
         else:
@@ -37,17 +38,17 @@ class DualPolElem(object):
         else:
             return self.tmfd.getfreqs()
 
-    def getJonesPat(self,freqval):
+    def getJonesPat(self, freqval):
         """Return the dual-pol antenna elements Jones pattern for a
         given frequency."""
-        THETA, PHI, p_E_th, p_E_ph=self.radFFp.getFFongrid(freqval)
-        THETA, PHI, q_E_th, q_E_ph=self.radFFq.getFFongrid(freqval)
+        THETA, PHI, p_E_th, p_E_ph = self.radFFp.getFFongrid(freqval)
+        THETA, PHI, q_E_th, q_E_ph = self.radFFq.getFFongrid(freqval)
 
-        Jones=numpy.zeros(p_E_th.shape+(2,2), dtype=complex)
-        Jones[...,0,0]=p_E_th
-        Jones[...,0,1]=p_E_ph
-        Jones[...,1,0]=q_E_th
-        Jones[...,1,1]=q_E_ph
+        Jones = numpy.zeros(p_E_th.shape+(2, 2), dtype=complex)
+        Jones[..., 0, 0] = p_E_th
+        Jones[..., 0, 1] = p_E_ph
+        Jones[..., 1, 0] = q_E_th
+        Jones[..., 1, 1] = q_E_ph
         return THETA, PHI, Jones
 
     def getJonesAlong(self, freqval, theta_phi_view):
@@ -55,32 +56,34 @@ class DualPolElem(object):
         (theta_build, phi_build) = self.view2build_coords(theta_view, phi_view)
         if self.tmfd is None:
             p_E_th, p_E_ph = self.radFFp.getFFalong_build(freqval,
-                                              (theta_build, phi_build) )
+                                                          (theta_build, phi_build))
             q_E_th, q_E_ph = self.radFFq.getFFalong_build(freqval,
-                                              (theta_build, phi_build) )
-            Jones=numpy.zeros(p_E_th.shape+(2,2), dtype=complex)
-            Jones[...,0,0] = p_E_th
-            Jones[...,0,1] = p_E_ph
-            Jones[...,1,0] = q_E_th
-            Jones[...,1,1] = q_E_ph
+                                                          (theta_build, phi_build))
+            Jones = numpy.zeros(p_E_th.shape+(2, 2), dtype=complex)
+            Jones[..., 0, 0] = p_E_th
+            Jones[..., 0, 1] = p_E_ph
+            Jones[..., 1, 0] = q_E_th
+            Jones[..., 1, 1] = q_E_ph
         else:
             Jones = self.tmfd.getJonesAlong(freqval,
-                                              (theta_build, phi_build) )
+                                            (theta_build, phi_build))
             if self.basis is not None:
-                p_E_th = Jones[...,0,0]
-                p_E_ph = Jones[...,0,1]
-                q_E_th = Jones[...,1,0]
-                q_E_ph = Jones[...,1,1]
-                p_E_th, p_E_ph=tvecfun.transfVecField2RotBasis(self.basis,
-                                            (theta_build, phi_build),
-                                            (p_E_th, p_E_ph))
-                q_E_th, q_E_ph=tvecfun.transfVecField2RotBasis(self.basis,
-                                            (theta_build, phi_build),
-                                            (q_E_th, q_E_ph))
-                Jones[...,0,0] = p_E_th
-                Jones[...,0,1] = p_E_ph
-                Jones[...,1,0] = q_E_th
-                Jones[...,1,1] = q_E_ph
+                p_E_th = Jones[..., 0, 0]
+                p_E_ph = Jones[..., 0, 1]
+                q_E_th = Jones[..., 1, 0]
+                q_E_ph = Jones[..., 1, 1]
+                p_E_th, p_E_ph = tvecfun.transfVecField2RotBasis(self.basis,
+                                                                 (theta_build,
+                                                                  phi_build),
+                                                                 (p_E_th, p_E_ph))
+                q_E_th, q_E_ph = tvecfun.transfVecField2RotBasis(self.basis,
+                                                                 (theta_build,
+                                                                  phi_build),
+                                                                 (q_E_th, q_E_ph))
+                Jones[..., 0, 0] = p_E_th
+                Jones[..., 0, 1] = p_E_ph
+                Jones[..., 1, 0] = q_E_th
+                Jones[..., 1, 1] = q_E_ph
         return Jones
 
     def getFFalong(self, freqval,  theta_phi_view, polchan=0):
@@ -136,7 +139,7 @@ class DualPolElem(object):
     def load_ffe(self, filename, request_p=None, request_q=None):
         #FIX: This not the most efficient way to do this as it does two passes over feko file.
         ffefile = FEKOffe(filename)
-        if request_p is None and request_q is None :
+        if request_p is None and request_q is None:
             if len(ffefile.Requests) == 2:
                 requests = list(ffefile.Requests)
                 requests.sort()  # # FIXME: Not sure how to order requests
@@ -158,23 +161,25 @@ class DualPolElem(object):
     def plotJonesPat3D(self, freq=0.0, vcoord='sph',
                        projection='equirectangular', cmplx_rep='AbsAng'):
         """Plot the Jones pattern as two single pol antenna patterns."""
-        theta_rad, phi_rad, JonesPat=self.getJonesPat(freq)
-        Ep = numpy.squeeze(JonesPat[...,0,:])
-        Eq = numpy.squeeze(JonesPat[...,1,:])
-        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Ep[...,0]),
-                            numpy.squeeze(Ep[...,1]), freq, vcoord,
+        theta_rad, phi_rad, JonesPat = self.getJonesPat(freq)
+        Ep = numpy.squeeze(JonesPat[..., 0, :])
+        Eq = numpy.squeeze(JonesPat[..., 1, :])
+        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Ep[..., 0]),
+                            numpy.squeeze(Ep[..., 1]), freq, vcoord,
                             projection, cmplx_rep, vfname='p-chan:'+self.radFFp.name)
-        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[...,0]),
-                            numpy.squeeze(Eq[...,1]), freq, vcoord,
+        tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[..., 0]),
+                            numpy.squeeze(Eq[..., 1]), freq, vcoord,
                             projection, cmplx_rep, vfname='q-chan:'+self.radFFp.name)
 
 
 def plot_polcomp_dynspec(tims, frqs, jones):
     """Plot dynamic power spectra of each polarization component."""
     #fig, (ax0, ax1) = plt.subplots(nrows=2)
-    p_ch = numpy.abs(jones[:,:,0,0].squeeze())**2+numpy.abs(jones[:,:,0,1].squeeze())**2
-    q_ch = numpy.abs(jones[:,:,1,1].squeeze())**2+numpy.abs(jones[:,:,1,0].squeeze())**2
-    ftims=matplotlib.dates.date2num(tims)
+    p_ch = numpy.abs(jones[:, :, 0, 0].squeeze())**2 + \
+        numpy.abs(jones[:, :, 0, 1].squeeze())**2
+    q_ch = numpy.abs(jones[:, :, 1, 1].squeeze())**2 + \
+        numpy.abs(jones[:, :, 1, 0].squeeze())**2
+    ftims = matplotlib.dates.date2num(tims)
     dynspecunit = 'flux arb.'
     # In dB
     dBunit = False
@@ -200,15 +205,16 @@ def plot_polcomp_dynspec(tims, frqs, jones):
 
 
 def jones2gIXR(jones):
-    U,s,V=numpy.linalg.svd(jones)
-    g = (s[...,0]+s[...,1])*0.5
-    cnd=s[...,0]/s[...,1]
-    IXRJ=((1+cnd)/(1-cnd))**2
+    U, s, V = numpy.linalg.svd(jones)
+    g = (s[..., 0]+s[..., 1])*0.5
+    cnd = s[..., 0]/s[..., 1]
+    IXRJ = ((1+cnd)/(1-cnd))**2
     return g, IXRJ
 
 
 def ampgain2intensitygain(g):
     pass
+
 
 def IXRJ2IXRM(IXRJ):
     """Convert Jones IXR to Mueller IXR. See Carozzi2011."""
