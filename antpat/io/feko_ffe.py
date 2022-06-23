@@ -39,7 +39,7 @@ class FEKOffeRequest(object):
 
 class FEKOffe(object):
     """A FEKOffe object holds the data contained in a FEKO .ffe file.
-    This consists of one or more FEKOffeRequest ."""
+    This consists of one or more FEKOffeRequest."""
 
     def __init__(self, fn=None, ftype='ascii'):
         self.comments = []
@@ -104,7 +104,7 @@ class FEKOffe(object):
                 # assume data format:
                 #"Theta" "Phi" "Re(Etheta)" "Im(Etheta)" "Re(Ephi)" "Im(Ephi)" "Gain(Theta)" "Gain(Phi)" "Gain(Total)"
                 cleanStr = " ".join(l.split())+" "
-                dlist = map(float, cleanStr.split(' ')[:-1])
+                dlist = list(map(float, cleanStr.split(' ')[:-1]))
                 theta.append(dlist[0])
                 phi.append(dlist[1])
                 etheta.append(dlist[2]+1j*dlist[3])
