@@ -4,7 +4,7 @@ import argparse
 import math
 import numpy
 import os.path
-from urlparse import urlparse
+from urllib.parse import urlparse
 from antpat.reps.sphgridfun import tvecfun
 from antpat.radfarfield import RadFarField
 from antpat.reps.vsharm.vshfield import vshField
