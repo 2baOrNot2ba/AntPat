@@ -19,9 +19,8 @@ class TVecFields(object):
 
     def _full_init(self, thetaMsh, phiMsh, F1, F2, R=None, basisType='polar'):
         self.R = R
-        self.thetaMsh = thetaMsh    # Assume thetaMsh is repeated columns
-                                    # (unique axis=0)
-        self.phiMsh = phiMsh  # Assume thetaMsh is repeated rows (uniq. axis=1)
+        self.thetaMsh = thetaMsh    # thetaMsh should rep. cols (unique axis=0)
+        self.phiMsh = phiMsh        # phiMsh should repeat rows (uniq. axis=1)
         if basisType == 'polar':
             self.Fthetas = F1
             self.Fphis = F2
@@ -393,14 +392,20 @@ def circ2lin(vl, vr, isign=1):
     """Convert 2-vector from circular basis to linear basis. Input order L, R.
     isign argument chooses sign of imaginary unit in phase convention.
     (See Hamaker1996_III)"""
-    vx =          (vl+vr)/math.sqrt(2)
+    vx = (vl+vr)/math.sqrt(2)
     vy = isign*1j*(vl-vr)/math.sqrt(2)
     return vx, vy
 
 
-def vcoordconvert(F1, F2, phi_rad, vcoordlist):
-    """Convert transverse vector components of field."""
-    # vcoords = ['Ludwig3', 'sph', 'circ', 'lin']
+def vcoordconvert(F1, F2, phi_rad, vcoords):
+    """\
+    Convert transverse vector components of field
+
+    N.B. if vec coord in vcoordlist allows concatenated conversions.
+    """
+    # all_vcoords = ['Ludwig3', 'sph', 'circ', 'lin']
+
+    vcoordlist = vcoords if type(vcoords) is list else [vcoords]
     compname = ['F_', 'F_']
     for vcoord in vcoordlist:
         if vcoord == 'Ludwig3':
@@ -416,7 +421,7 @@ def vcoordconvert(F1, F2, phi_rad, vcoordlist):
             F1p, F2p = circ2lin(F1, F2)
             compsuffix = ['X', 'Y']
         else:
-            raise ValueError("Unknown vector coord sys")
+            raise ValueError("Unknown vector coord sys: '{}'".format(vcoord))
         compname = [compname[0]+compsuffix[0], compname[1]+compsuffix[1]]
         F1, F2 = F1p, F2p
     return F1, F2, compname
@@ -446,7 +451,7 @@ def plotvfonsph(theta_rad, phi_rad, F_th, F_ph, freq=0.0,
                                                           F_th, F_ph,
                                                           projection)
     F0_c, F1_c, compNames = vcoordconvert(F_th, F_ph, phi_rad,
-                                          vcoordlist=vcoordlist)
+                                          vcoords=vcoordlist)
     F0_2r, cmplxop0 = cmplx2realrep(F0_c, cmplx_rep)
     F1_2r, cmplxop1 = cmplx2realrep(F1_c, cmplx_rep)
     if projection == 'orthographic':
@@ -523,9 +528,29 @@ def plotvfonsph3D(theta_rad, phi_rad, E_th, E_ph, freq=0.0,
 
 
 def sph2Ludwig3(azl, EsTh, EsPh):
-    """Input: an array of theta components and an array of phi components.
-    Output: an array of Ludwig u components and array Ludwig v.
-    Ref Ludwig1973a."""
+    """\
+    Convert vector field from spherical components to Ludwig3 components
+
+    Parameters
+    ----------
+    azl : list of float
+        Azimuth coordinates in radians.
+    EsTh : array of complex
+        Vector field component along theta direction.
+    EsPh : array of complex
+        Vector field component along phi direction.
+
+    Returns
+    -------
+    EsU : array of Complex
+        Vector field component along u direction.
+    EsV : array of Complex
+        Vector field component along v direction.
+
+    Reference
+    ---------
+    Ludwig1973a
+    """
     EsU = EsTh*numpy.sin(azl)+EsPh*numpy.cos(azl)
     EsV = EsTh*numpy.cos(azl)-EsPh*numpy.sin(azl)
     return EsU, EsV
