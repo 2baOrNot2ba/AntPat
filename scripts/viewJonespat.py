@@ -5,7 +5,7 @@ polarization channel.)"""
 import sys
 import os
 import argparse
-from urlparse import urlparse
+from urllib.parse import urlparse
 from antpat.reps.sphgridfun.tvecfun import TVecFields
 from antpat.radfarfield import RadFarField
 from antpat.dualpolelem import DualPolElem
@@ -14,6 +14,7 @@ from antpat.dualpolelem import DualPolElem
 FEKOsuffix = 'ffe'
 GRASPsuffix = 'swe'
 NECsuffix = 'out'
+
 
 def plotJones_fromFEKOfiles(p_chan_file, q_chan_file, freq):
     (tvf_p, tvf_q) = (TVecFields(), TVecFields())
@@ -26,7 +27,7 @@ def plotJones_fromFEKOfiles(p_chan_file, q_chan_file, freq):
     dualpolAnt.plotJonesPat3D(freq, vcoord='circ',
                               projection='azimuthal-equidistant',
                               cmplx_rep='ReIm')
-    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -37,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument("freq", nargs='?', type=float,
                         help="Frequency in Hertz")
     args = parser.parse_args()
-    
+
     if args.p_chan_file.endswith(FEKOsuffix):
         plotJones_fromFEKOfiles(args.p_chan_file, args.q_chan_file, args.freq)
     elif args.p_chan_file.endswith(GRASPsuffix):
@@ -45,5 +46,5 @@ if __name__ == "__main__":
     elif args.p_chan_file.endswith(NECsuffix):
         print("Not implemented yet.")
     else:
-        print("Far-field pattern file type not known")
-        exit(1)
+        print("Unknown far-field pattern file type: '{}'"
+            .format(args.p_chan_file.split('.')[-1]))
