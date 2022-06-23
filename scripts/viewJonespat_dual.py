@@ -71,7 +71,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.filename.endswith(antfiles.HamArtsuffix):
-        hp = convLOFARcc2DPE(args.filename, [args.freq])
+        hp = convLOFARcc2DPE(args.filename)
     elif args.filename.endswith(antfiles.FEKOsuffix):
         hp = DualPolElem()
         hp.load_ffes(args.filename, args.filename_q)
