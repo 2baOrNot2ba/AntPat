@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """A simple viewer for Jones patterns for dual-polarized representations.
 """
 import argparse
