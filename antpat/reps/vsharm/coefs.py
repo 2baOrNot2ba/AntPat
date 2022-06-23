@@ -3,7 +3,7 @@
 
 import math
 import numpy
-from vshfield import vshField
+from .vshfield import vshField
 
 
 class Coefs(object):
