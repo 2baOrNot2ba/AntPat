@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 
 from antpat.reps.sphgridfun.pntsonsphere import ZenHemisphGrid
 from antpat.dualpolelem import DualPolElem, jones2gIXR, IXRJ2IXRM
-from antpat.reps.hamaker import convLOFARcc2DPE
-import antpat.io.filetypes as antfiles
+from antpat.io.dualpol_ingest import load_dualpol_files
 
 
 def plotJonesCanonical(theta, phi, jones, dpelemname):
@@ -70,15 +69,7 @@ if __name__ == "__main__":
                         """)
     args = parser.parse_args()
 
-    if args.filename.endswith(antfiles.HamArtsuffix):
-        hp = convLOFARcc2DPE(args.filename)
-    elif args.filename.endswith(antfiles.FEKOsuffix):
-        hp = DualPolElem()
-        hp.load_ffes(args.filename, args.filename_q)
-    else:
-        raise RuntimeError("dual-pol pattern file type not known")
+    dpe = load_dualpol_files(args.filename, args.filename_q)
     THETA, PHI = ZenHemisphGrid()
-    jones = hp.getJonesAlong([args.freq], (THETA, PHI))
+    jones = dpe.getJonesAlong([args.freq], (THETA, PHI))
     plotFFpat()
-    # plotJonesCanonical(THETA, PHI, jones, os.path.basename(args.filename)
-    #                    + ' (' + str(args.freq/1e6) + ' MHz)')
