@@ -212,6 +212,42 @@ def jones2gIXR(jones):
     return g, IXRJ
 
 
+def instrumentalStokes(jones):
+    """\
+    Compute the intrumental Stokes parameters from a Jones matrix
+
+    The instrumental Stokes is computed from the hermitian square
+    of the Jones matrix.
+
+    Parameters
+    ----------
+    jones : array
+        A stack of Jones matrices with the last two indices pertaining
+        to the Jones msatrix proper.
+
+    Returns
+    -------
+    si : array
+        Stokes I.
+    sq : array
+        Stokes Q.
+    su : array
+        Stokes U.
+    sv : array
+        Stokes V.
+    """
+    cov = numpy.matmul(jones, numpy.conjugate(numpy.swapaxes(jones, -2, -1)))
+    cov_xx = cov[..., 0, 0]
+    cov_xy = cov[..., 0, 1]
+    cov_yx = cov[..., 1, 0]
+    cov_yy = cov[..., 1, 1]
+    si = +1*numpy.real(cov_xx + cov_yy)
+    sq = +1*numpy.real(cov_xx - cov_yy)
+    su = +1*numpy.real(cov_xy + cov_yx)
+    sv = -1*numpy.imag(cov_xy - cov_yx)
+    return si, sq, su, sv
+
+
 def ampgain2intensitygain(g):
     pass
 
