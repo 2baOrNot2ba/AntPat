@@ -125,14 +125,22 @@ class DualPolElem(object):
         else:
             self.basis = numpy.matmul(rotMat, self.basis)
 
-    def load_ffes(self, filename_p, filename_q):
-        """Load a pair of FFE and make them correspond to this DualPolElem
-        object. First file will be pol-channel p and second q."""
+    def load_jones(self, filename_p, filename_q):
+        """Load a pair of FFEs, convert to receive Jones matrices
+        and make them correspond to this DualPolElem object.
+        First file will be pol-channel p and second q."""
         ffefile_p = FEKOffe(filename_p)
         tvf_p = tvecfun.TVecFields()
         tvf_q = tvecfun.TVecFields()
         tvf_p.load_ffe(filename_p)
         tvf_q.load_ffe(filename_q)
+        # Convert from farfield pattern to effective heights
+        freqs = tvf_q.getRs()[:, numpy.newaxis, numpy.newaxis]
+        mu0 = 12.566e-7
+        scalefac = -1.0j*2/(freqs*mu0)
+        # scalefac = 1.0
+        tvf_p.scale(scalefac)
+        tvf_q.scale(scalefac)
         self.radFFp = RadFarField(tvf_p)
         self.radFFq = RadFarField(tvf_q)
 
