@@ -24,7 +24,7 @@ def load_dualpol_files(pattern_url, pattern_q_url=None):
         dpe = convLOFARcc2DPE(args.filename)
     elif suffix == antfiles.FEKOsuffix:
         dpe = DualPolElem()
-        dpe.load_ffes(pattern_url, pattern_q_url)
+        dpe.load_jones(pattern_url, pattern_q_url)
     else:
         raise RuntimeError("Unknown Dual-pol pattern file type {}"
                            .format(suffix))
