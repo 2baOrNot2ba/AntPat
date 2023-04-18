@@ -4,6 +4,7 @@
 import numpy
 import matplotlib.pyplot as plt
 import matplotlib.dates
+from . import Z_0, MU_0
 from antpat.reps.sphgridfun import pntsonsphere, tvecfun
 from antpat.io.feko_ffe import FEKOffe
 from antpat.radfarfield import RadFarField
@@ -136,8 +137,7 @@ class DualPolElem(object):
         tvf_q.load_ffe(filename_q)
         # Convert from farfield pattern to effective heights
         freqs = tvf_q.getRs()[:, numpy.newaxis, numpy.newaxis]
-        mu0 = 12.566e-7
-        scalefac = -1.0j*2/(freqs*mu0)
+        scalefac = -1.0j*2/(freqs*MU_0)
         # scalefac = 1.0
         tvf_p.scale(scalefac)
         tvf_q.scale(scalefac)
@@ -177,7 +177,7 @@ class DualPolElem(object):
                             projection, cmplx_rep, vfname='p-chan:'+self.radFFp.name)
         tvecfun.plotvfonsph(theta_rad, phi_rad, numpy.squeeze(Eq[..., 0]),
                             numpy.squeeze(Eq[..., 1]), freq, vcoord,
-                            projection, cmplx_rep, vfname='q-chan:'+self.radFFp.name)
+                            projection, cmplx_rep, vfname='q-chan:'+self.radFFq.name)
 
 
 def plot_polcomp_dynspec(tims, frqs, jones):
@@ -263,3 +263,28 @@ def ampgain2intensitygain(g):
 def IXRJ2IXRM(IXRJ):
     """Convert Jones IXR to Mueller IXR. See Carozzi2011."""
     return (1+IXRJ)/(1*numpy.sqrt(IXRJ))
+
+
+def ixr_Aeff(jones_arr, Z_load=50.0):
+    """Compute IXR and effective Area for array Jones
+    
+    Default load impedance is 50 Ohms.
+    """
+    u, s, vh = numpy.linalg.svd(jones_arr)
+    g_max, g_min = s[...,0], s[...,1]
+    ixr = ((g_max+ g_min)/(g_max- g_min))**2
+    # Each component picks 1/2 of total flux:
+    G = (g_max**2+g_min**2)/2.0
+    # Convert loaded voltage^2 to power and flux to E-field by incl impedances:
+    Aeff = Z_0/Z_load*G
+    return ixr, Aeff
+
+
+def ixr_g(jones_arr):
+    """Compute IXR and mean amplitude gain for array Jones"""
+    u, s, vh = numpy.linalg.svd(jones_arr)
+    g_max, g_min = s[...,0], s[...,1]
+    ixr = ((g_max+ g_min)/(g_max- g_min))**2
+    g = (g_max + g_min)/2.0
+    return ixr, g
+
