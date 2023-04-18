@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """A simple viewer for Jones patterns for dual-polarized representations.
 """
+import sys
 import argparse
 import numpy
 import matplotlib.pyplot as plt
@@ -47,17 +48,23 @@ def plotJonesCanonical(theta, phi, jones, dpelemname):
     plt.show()
 
 
-def plotFFpat():
+def plot_jonespat(thetas, phis, jones):
     from antpat.reps.sphgridfun import tvecfun
     for polchan in [0, 1]:
         E_th = jones[:, :, polchan, 0].squeeze()
         E_ph = jones[:, :, polchan, 1].squeeze()
-        tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, args.freq,
+        tvecfun.plotvfonsph(thetas, phis, E_th, E_ph, args.freq,
                             vcoordlist=['Ludwig3'], projection='orthographic')
+
+def print_jonespat(freq, theta, phi, jones):
+    print(','.join([str(f) for f in jones.flatten()]))#.tolist()))
 
 
 if __name__ == "__main__":
+    cmd = sys.argv.pop(1)
     parser = argparse.ArgumentParser()
+    parser.add_argument("-t","--theta", type=float, default=None)
+    parser.add_argument("-p","--phi", type=float, default=None)
     parser.add_argument("freq", type=float,
                         help="Frequency in Hertz")
     parser.add_argument("filename", help="""
@@ -70,6 +77,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     dpe, _, _ = load_dualpol_files(args.filename, args.filename_q)
-    THETA, PHI = ZenHemisphGrid()
-    jones = dpe.getJonesAlong([args.freq], (THETA, PHI))
-    plotFFpat()
+    if args.theta is None and args.phi is None:
+        thetas, phis = ZenHemisphGrid()
+    else:
+        thetas, phis = [args.theta], [args.phi]
+
+    jones = dpe.getJonesAlong([args.freq], (thetas, phis))
+
+    if cmd == 'plot':
+        plot_jonespat(thetas, phis, jones)
+    else:
+        print_jonespat(args.freq, thetas[0], phis[0], jones)
+
