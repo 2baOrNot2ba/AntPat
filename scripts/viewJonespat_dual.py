@@ -69,7 +69,7 @@ if __name__ == "__main__":
                         """)
     args = parser.parse_args()
 
-    dpe = load_dualpol_files(args.filename, args.filename_q)
+    dpe, _, _ = load_dualpol_files(args.filename, args.filename_q)
     THETA, PHI = ZenHemisphGrid()
     jones = dpe.getJonesAlong([args.freq], (THETA, PHI))
     plotFFpat()
