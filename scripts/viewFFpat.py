@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """A simple viewer for legacy far-field pattern files."""
 import argparse
 import math
@@ -11,6 +11,7 @@ from antpat.reps.vsharm.vshfield import vshField
 from antpat.reps.vsharm.coefs import load_SWE2vshCoef
 import antpat.io.filetypes as ft
 from antpat.io.NECread import readNECout_tvecfuns
+from antpat.io.flatfile_ff import load_flatfile_radpat
 
 
 if __name__ == "__main__":
@@ -21,9 +22,14 @@ if __name__ == "__main__":
     parser.add_argument("freq", nargs='?', type=float,
                         help="Frequency in Hertz")
     args = parser.parse_args()
-    pattern_URL = urlparse(args.patternURL)
-    FFfile = pattern_URL.path
-    request = pattern_URL.fragment
+    try:
+        pattern_URL = urlparse(args.patternURL)
+        FFfile = pattern_URL.path
+        request = pattern_URL.fragment
+    except:
+        FFfile = args.patternURL
+        request = None
+
     if request == '':
         request = None
     freq = args.freq
@@ -40,6 +46,7 @@ if __name__ == "__main__":
         print("Frequency={}".format(freq))
         (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(),
                                     tvf.getFthetas(freq), tvf.getFphis(freq))
+        print(THETA.shape)
         tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, freq=freq,
                             vcoordlist=['Ludwig3', 'circ'],
                             projection='azimuthal-equidistant',
@@ -67,5 +74,13 @@ if __name__ == "__main__":
                             cmplx_rep='AbsAng',
                             vfname=os.path.basename(FFfile))
     else:
-        print("Far-field pattern file type not known")
-        exit(1)
+        rp = load_flatfile_radpat(FFfile)
+        tvf = rp.tvgrids
+        (THETA, PHI, E_th, E_ph) = (tvf.getthetas(), tvf.getphis(),
+                                    tvf.getFthetas(freq), tvf.getFphis(freq))
+        print(THETA.shape)
+        tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, freq=freq,
+                            vcoordlist=['Ludwig3'],
+                            projection='orthographic',
+                            cmplx_rep='AbsAng',
+                            vfname=os.path.basename(FFfile))
