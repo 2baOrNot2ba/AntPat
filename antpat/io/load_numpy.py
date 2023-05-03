@@ -31,6 +31,8 @@ def load_numpy_dpe(npfile):
       E_q_phs = data['E_q_phs']
       pow_inp_p = data['pow_inp_p']
       pow_inp_q = data['pow_inp_q']
+      pow_rad_p = data['pow_rad_p']
+      pow_rad_q = data['pow_rad_q']
 
     tvfd_p = tvecfun.TVecFields()
     tvfd_p._full_init(thetamsh, phimsh, E_p_ths, E_p_phs, R=freqs)
@@ -41,5 +43,7 @@ def load_numpy_dpe(npfile):
     dpe = DualPolElem(rp_p, rp_q)
     dpe.pow_inp_p = pow_inp_p
     dpe.pow_inp_q = pow_inp_q
+    dpe.pow_rad_p = pow_rad_p
+    dpe.pow_rad_q = pow_rad_q
     return dpe
 
