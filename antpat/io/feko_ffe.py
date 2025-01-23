@@ -174,7 +174,7 @@ class FEKOffe(object):
 if __name__ == '__main__':
     print('Running test cases...')
     print('Reading FEKO file')
-    fekoFile = FEKOffe('../../example_FF_files/FFE/PAPER_FF_X.ffe')
+    fekoFile = FEKOffe('../../share/FFE/PAPER_FF_X.ffe')
     filecopyname = 'test_feko.ffe'
     for req in fekoFile.Requests:
         print(req)
