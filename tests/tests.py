@@ -24,7 +24,7 @@ matplotlib.use('WXAgg')  # Maybe comment this out.
 
 
 projdir = os.path.dirname(os.path.abspath('.'))
-dataformdir = projdir+'/example_FF_files/'
+dataformdir = projdir+'/share/'
 SWEdir = dataformdir+'/SWE/'
 NECdir = dataformdir+'/NEC_out/'
 FFEdir = dataformdir+'/FFE/'

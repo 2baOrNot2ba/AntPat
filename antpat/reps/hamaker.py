@@ -427,22 +427,22 @@ def _getargs():
 
 
 if __name__ == "__main__":
-    #artsdata = _read_LOFAR_HAcc('../../example_FF_files/DefaultCoeffHBA.cc')
+    #artsdata = _read_LOFAR_HAcc('../../share/DefaultCoeffHBA.cc')
     artsdata = _read_LOFAR_HAcc('../../../dreamBeam/dreambeam/telescopes/LOFAR/share/defaultCoeffHBA.cc')
-    print(artsdata)
-    exit()
-    freq = 55e6
+    #print(artsdata)
+    #exit()
+    freq = 150e6
     SAMPFREQ = 100e6
     NR_CHANNELS = 512
-    artsdata["channels"] = numpy.linspace(SAMPFREQ, 3*SAMPFREQ, 2*NR_CHANNELS, endpoint=False)
-    _write_LOFAR_HAcc(artsdata)
-    exit()
+    #artsdata["channels"] = numpy.linspace(SAMPFREQ, 3*SAMPFREQ, 2*NR_CHANNELS, endpoint=False)
+    #_write_LOFAR_HAcc(artsdata)
+    #exit()
     LBAmod = HamakerPolarimeter(artsdata)
     freqarg = [freq]
     phiarg = [[0.1-5*math.pi/4]]
     thtarg = [[math.pi/2-1.1]]
     jones = LBAmod.getJonesAlong(freqarg, (thtarg, phiarg))
     # jones_1 = LBAmod._getJonesAlong_alt(freqarg, (thtarg, phiarg))
-    print(jones)
-    exit()
+    #print(jones)
+    #exit()
     plotElemPat(artsdata, freq)
