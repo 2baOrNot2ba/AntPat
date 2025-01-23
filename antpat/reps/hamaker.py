@@ -425,24 +425,40 @@ def _getargs():
     el = float(sys.argv[3])
     return freq, az, el
 
+def plotStokesI(artsdata, frequency=55.0e6):
+    """Plot the Stokes I of HA antenna pattern over Hemisphere"""
+    THETA, PHI = pntsonsphere.ZenHemisphGrid()  # theta=0.2rad for zeni anomaly
+    hp = HamakerPolarimeter(artsdata)
+    jones = hp.getJonesAlong([frequency], (THETA, PHI))
+    cohmat = numpy.real(numpy.matmul(jones,
+                                     numpy.moveaxis(jones.conj(), -1,-2)))
+    si = cohmat[...,0,0]+cohmat[...,1,1]
+    import matplotlib.pyplot as plt
+    plt.pcolormesh( THETA*numpy.cos(PHI), THETA*numpy.sin(PHI), si)
+    plt.axis('equal')
+    plt.title('Stokes I for HBA  @ {} MHz'.format(freq/1e6))
+    plt.show()
 
 if __name__ == "__main__":
     #artsdata = _read_LOFAR_HAcc('../../example_FF_files/DefaultCoeffHBA.cc')
-    artsdata = _read_LOFAR_HAcc('../../../dreamBeam/dreambeam/telescopes/LOFAR/share/defaultCoeffHBA.cc')
-    print(artsdata)
-    exit()
-    freq = 55e6
+    #artsdata = _read_LOFAR_HAcc('../../../dreamBeam/dreambeam/telescopes/LOFAR/share/defaultCoeffHBA.cc')
+    artsdata = _read_LOFAR_HAcc(sys.argv[1])
+
+    #print(artsdata)
+    #exit()
+    freq = 150e6
     SAMPFREQ = 100e6
     NR_CHANNELS = 512
     artsdata["channels"] = numpy.linspace(SAMPFREQ, 3*SAMPFREQ, 2*NR_CHANNELS, endpoint=False)
-    _write_LOFAR_HAcc(artsdata)
-    exit()
+    #_write_LOFAR_HAcc(artsdata)
+    #exit()
     LBAmod = HamakerPolarimeter(artsdata)
     freqarg = [freq]
     phiarg = [[0.1-5*math.pi/4]]
     thtarg = [[math.pi/2-1.1]]
     jones = LBAmod.getJonesAlong(freqarg, (thtarg, phiarg))
     # jones_1 = LBAmod._getJonesAlong_alt(freqarg, (thtarg, phiarg))
-    print(jones)
-    exit()
-    plotElemPat(artsdata, freq)
+    #print(jones)
+    #exit()
+    #plotElemPat(artsdata, freq)
+    plotStokesI(artsdata, freq)
