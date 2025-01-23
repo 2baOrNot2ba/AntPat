@@ -64,3 +64,8 @@ target/
 
 # pyenv
 .python-version
+
+# IDEs
+.idea/
+.vscode/launch.json
+AntPat.code-workspace
