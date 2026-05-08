@@ -14,7 +14,7 @@ def load_numpy_radpat(npfile):
       E_phs = data['E_phs']
 
     tvfd = tvecfun.TVecFields()
-    tvfd._full_init(thetamsh, phimsh, E_ths, E_p_phs, R=freqs)
+    tvfd._full_init(thetamsh, phimsh, E_ths, E_phs, R=freqs)
     rp = RadFarField(tvfd)
     return rp
 
