@@ -481,13 +481,13 @@ def plotvfonsph(theta_rad, phi_rad, F_th, F_ph, freq=0.0,
         if projection == 'equirectangular':
             ax.invert_yaxis()
 
-    ax = plt.subplot(221, polar=False)
+    ax = plt.subplot(221, aspect='equal', polar=False)
     plotcomp(0, 0, F0_2r, cmplxop0, xyNames, nom_xticks)
-    ax = plt.subplot(222, polar=False)
+    ax = plt.subplot(222, aspect='equal', polar=False)
     plotcomp(0, 1, F0_2r, cmplxop0, xyNames, nom_xticks)
-    ax = plt.subplot(223, polar=False)
+    ax = plt.subplot(223, aspect='equal', polar=False)
     plotcomp(1, 0, F1_2r, cmplxop1, xyNames, nom_xticks)
-    ax = plt.subplot(224, polar=False)
+    ax = plt.subplot(224, aspect='equal', polar=False)
     plotcomp(1, 1, F1_2r, cmplxop1, xyNames, nom_xticks)
 
     plt.show()
