@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "AntPat"
+dynamic = ["version"]
+description = "Antenna pattern tools"
+authors = [
+    {name = "Tobia D. Carozzi", email = "tobia.carozzi@chalmers.se"}
+]
+license = {text = "ISC"}
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: ISC License",
+  "Programming Language :: Python :: 3.8",
+  "Topic :: Scientific/Engineering :: Astronomy",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Scientific/Engineering :: Visualization"
+]
+dependencies = [
+  "numpy",
+  "scipy",
+  "matplotlib"
+]
+requires-python = ">=3.8"
+
+[tool.setuptools]
+packages = [
+    "antpat",
+    "antpat.io",
+    "antpat.reps",
+    "antpat.scripts",
+]
+#scripts-files = ['antpat/scripts/viewFFpat.py', 'antpat/scripts/viewJonespat.py', 'antpat/scripts/viewJonespat_dual.py']
+
+[tool.setuptools.dynamic]
+version = {attr = "antpat.__version__"}
+
+[tool.setuptools.package-data]
+antpat = [
+    "share/FFE/*.ffe",  # FEKO
+    "share/FlatFile/*.ff",  # 
+    "share/SWE/*.sph",  # GRASP Sph. Wave Ex coefs.
+    "share/HA_cc/*.cc"  # Hamaker-Arts model w. CC coefs
+]
