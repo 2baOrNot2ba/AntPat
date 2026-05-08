@@ -6,7 +6,7 @@ import argparse
 import numpy
 import matplotlib.pyplot as plt
 
-from antpat.reps.sphgridfun.pntsonsphere import ZenHemisphGrid
+from antpat.reps.sphgridfun.pntsonsphere import ZenHemisphGrid, sph2crtISO
 from antpat.dualpolelem import DualPolElem, jones2gIXR, IXRJ2IXRM
 from antpat.io.dualpol_ingest import load_dualpol_files
 
@@ -48,6 +48,37 @@ def plotJonesCanonical(theta, phi, jones, dpelemname):
     plt.show()
 
 
+def plot_copol(thetas, phis, jones):
+    """Plot co-polarized power patterns"""
+    Ep_th = jones[:, :, 0, 0].squeeze()
+    Ep_ph = jones[:, :, 0, 1].squeeze()
+    Eq_th = jones[:, :, 1, 0].squeeze()
+    Eq_ph = jones[:, :, 1, 1].squeeze()
+    Ppp = numpy.abs(Ep_th)**2+numpy.abs(Ep_ph)
+    Pppmax = numpy.max(Ppp)
+    Pqq = numpy.abs(Eq_th)**2+numpy.abs(Eq_ph)
+    Pqqmax = numpy.max(Pqq) 
+    l, m, n = sph2crtISO(thetas, phis)
+    plt.subplot(1,2,1)
+    plt.pcolormesh(l, m, Ppp/Pppmax)
+    plt.xlabel('l')
+    plt.ylabel('m')
+    plt.colorbar()
+    plt.axis('equal')
+    plt.title('Stokes I p-channel')
+    plt.subplot(1,2,2)
+    plt.pcolormesh(l, m, Pqq/Pqqmax)
+    plt.xlabel('l')
+    plt.ylabel('m')
+    plt.colorbar()
+    plt.axis('equal')  
+    plt.title('Stokes I q-channel')
+    plt.suptitle('Co-polarized Patterns at {} MHz (orthographic)'
+                 .format(args.freq/1e6))
+    #plt.tight_layout()
+    plt.show()
+
+        
 def plot_jonespat(thetas, phis, jones):
     from antpat.reps.sphgridfun import tvecfun
     for polchan in [0, 1]:
@@ -57,7 +88,13 @@ def plot_jonespat(thetas, phis, jones):
                             vcoordlist=['Ludwig3'], projection='orthographic')
 
 def print_jonespat(freq, theta, phi, jones):
-    print(','.join([str(f) for f in jones.flatten()]))#.tolist()))
+    print('Frequency:', freq)
+    for idxi in range(theta.shape[0]):
+        for idxj in range(theta.shape[1]):
+            print(theta[idxi, idxj], phi[idxi, idxj], end=' ')
+            for jne in jones[idxi, idxj].flatten():
+                print(jne, end=' ')
+            print('')
 
 
 if __name__ == "__main__":
@@ -86,6 +123,7 @@ if __name__ == "__main__":
 
     if cmd == 'plot':
         plot_jonespat(thetas, phis, jones)
+    elif cmd == 'plot2':
+        plot_copol(thetas, phis, jones)
     else:
-        print_jonespat(args.freq, thetas[0], phis[0], jones)
-
+        print_jonespat(args.freq, thetas, phis, jones)

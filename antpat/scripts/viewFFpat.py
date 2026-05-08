@@ -48,8 +48,8 @@ if __name__ == "__main__":
                                     tvf.getFthetas(freq), tvf.getFphis(freq))
         print(THETA.shape)
         tvecfun.plotvfonsph(THETA, PHI, E_th, E_ph, freq=freq,
-                            vcoordlist=['Ludwig3', 'circ'],
-                            projection='azimuthal-equidistant',
+                            vcoordlist=['Ludwig3', 'lin'],
+                            #projection='azimuthal-equidistant',
                             cmplx_rep='AbsAng',
                             vfname=os.path.basename(FFfile))
     elif FFfile.endswith(ft.GRASPsuffix):
