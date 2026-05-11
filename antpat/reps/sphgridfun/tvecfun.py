@@ -4,6 +4,7 @@ import numpy.ma
 import datetime
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
+from antpat.io.CST_FF_ASCII import CST_FF_ASCII
 from antpat.io.feko_ffe import FEKOffe, FEKOffeRequest
 from .pntsonsphere import sph2crtISO
 
@@ -59,6 +60,15 @@ class TVecFields(object):
             self.phiMsh = numpy.delete(self.phiMsh, -1, 1)
             self.Fthetas = numpy.delete(self.Fthetas, -1, 2)
             self.Fphis = numpy.delete(self.Fphis, -1, 2)
+
+    def load_cst(self, filename, freq=None, freq_unit='MHz'):
+        """Read a CST text far-field export into this vector field."""
+        cstfile = CST_FF_ASCII(filename, freq=freq, freq_unit=freq_unit)
+        self.R = cstfile.freq
+        self.thetaMsh = numpy.deg2rad(cstfile.theta)
+        self.phiMsh = numpy.deg2rad(cstfile.phi)
+        self.Fthetas = cstfile.etheta
+        self.Fphis = cstfile.ephi
 
     def save_ffe(self, filename, request='FarField', source='Unknown'):
         """ """
@@ -345,6 +355,20 @@ def plotFEKO(filename, request=None, freq_req=None):
                                 tvf.getFthetas(freq), tvf.getFphis(freq))
     plotvfonsph(THETA, PHI, E_th, E_ph, freq, vcoord='Ludwig3',
                 projection='orthographic')
+
+
+def plotCST(filename, freq=None, freq_unit='MHz', projection='orthographic'):
+    """Convenience function that reads a CST far-field text export and plots it."""
+    tvf = TVecFields()
+    tvf.load_cst(filename, freq=freq, freq_unit=freq_unit)
+    freq_hz = tvf.getRs()
+    print("Frequency={}".format(freq_hz))
+    THETA = tvf.getthetas()
+    PHI = tvf.getphis()
+    E_th = tvf.getFthetas(freq_hz)
+    E_ph = tvf.getFphis(freq_hz)
+    plotvfonsph(THETA, PHI, E_th, E_ph, freq_hz, vcoordlist=['sph'],
+                projection=projection)
 
 
 # TobiaC (2013-06-17)

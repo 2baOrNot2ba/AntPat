@@ -69,3 +69,6 @@ target/
 .idea/
 .vscode/launch.json
 AntPat.code-workspace
+
+# macOS Finder
+.DS_Store
