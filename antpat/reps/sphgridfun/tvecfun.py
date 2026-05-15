@@ -4,6 +4,7 @@ import numpy.ma
 import datetime
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
+from antpat.io.CST_FF_ASCII import CST_FF_ASCII
 from antpat.io.feko_ffe import FEKOffe, FEKOffeRequest
 from .pntsonsphere import sph2crtISO
 
@@ -59,6 +60,22 @@ class TVecFields(object):
             self.phiMsh = numpy.delete(self.phiMsh, -1, 1)
             self.Fthetas = numpy.delete(self.Fthetas, -1, 2)
             self.Fphis = numpy.delete(self.Fphis, -1, 2)
+
+    def load_cst(self, filename, freq=None, freq_unit='MHz', basisType=None):
+        """Read a CST text far-field export into this vector field.
+
+        Parameters
+        ----------
+        basisType : {'polar', 'Ludwig3'}, optional
+            Override the basis declared by the CST header. If omitted, the
+            loader detects the basis from the header and defaults to 'polar'
+            when the header is absent or ambiguous.
+        """
+        cstfile = CST_FF_ASCII(filename, freq=freq, freq_unit=freq_unit,
+                               basisType=basisType)
+        self._full_init(numpy.deg2rad(cstfile.theta), numpy.deg2rad(cstfile.phi),
+                        cstfile.F1, cstfile.F2, R=cstfile.freq,
+                        basisType=cstfile.basisType)
 
     def save_ffe(self, filename, request='FarField', source='Unknown'):
         """ """
@@ -345,6 +362,26 @@ def plotFEKO(filename, request=None, freq_req=None):
                                 tvf.getFthetas(freq), tvf.getFphis(freq))
     plotvfonsph(THETA, PHI, E_th, E_ph, freq, vcoord='Ludwig3',
                 projection='orthographic')
+
+
+def plotCST(filename, freq=None, freq_unit='MHz', projection='orthographic',
+            basisType=None):
+    """Convenience function that reads a CST far-field text export and plots it.
+
+    basisType may be set to 'polar' or 'Ludwig3'. If omitted, the basis is
+    detected from the CST header and defaults to 'polar' when ambiguous.
+    """
+    tvf = TVecFields()
+    tvf.load_cst(filename, freq=freq, freq_unit=freq_unit,
+                 basisType=basisType)
+    freq_hz = tvf.getRs()
+    print("Frequency={}".format(freq_hz))
+    THETA = tvf.getthetas()
+    PHI = tvf.getphis()
+    E_th = tvf.getFthetas(freq_hz)
+    E_ph = tvf.getFphis(freq_hz)
+    plotvfonsph(THETA, PHI, E_th, E_ph, freq_hz, vcoordlist=['sph'],
+                projection=projection)
 
 
 # TobiaC (2013-06-17)
